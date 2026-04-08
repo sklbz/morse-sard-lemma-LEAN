@@ -39,15 +39,22 @@ by
 
   let hε' := div_pos hε hμ
 
+
   obtain ⟨δ, δ_pos, hδ⟩ := hf'_uniform ε' hε'
 
   let k := ⌈μ / δ⌉
   have hk : (k: ℝ) > 0 := Int.cast_pos.2 (Int.ceil_pos.2 (div_pos hμ δ_pos))
+  have k_le: μ / δ ≤ k := Int.le_ceil (μ / δ)
+
+
 
   let δ' := μ / k
   have δ'_pos := div_pos δ_pos hk
-
   sorry
+
+example (x y z : ℝ) (h_inq: x ≤ y) (hx: x > 0) (hy: y > 0) (hz: z > 0) : 
+    z/y ≤ z/x := by  
+  exact (div_le_div_iff_of_pos_left hz hy hx).mpr h_inq
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) : 
   is_negligeable (f '' {x | deriv f x = 0}) := 
