@@ -6,8 +6,12 @@ import Mathlib.Topology.MetricSpace.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Order.Interval.Set.Defs
 import Mathlib.Data.Finset.Defs
+import SardLemma.CeilDiv
+import SardLemma.Monotonicity
 
 open BigOperators
+open SardLemma
+open Monotonous
 
 -- Définition d'un ensemble de mesure nulle
 def is_negligeable (A : Set ℝ) : Prop :=
@@ -22,6 +26,8 @@ by
   let I : Set ℝ := Set.Icc a b
   let μ := b-a
   let f' : ℝ → ℝ := deriv f
+
+  change μ > 0 at hμ
 
   have hf'_cont : Continuous f' := ContDiff.continuous_deriv_one hf
   have hf'_cont_on_I : ContinuousOn f' I := hf'_cont.continuousOn
@@ -44,11 +50,13 @@ by
 
   let k := ⌈μ / δ⌉
   have hk : (k: ℝ) > 0 := Int.cast_pos.2 (Int.ceil_pos.2 (div_pos hμ δ_pos))
-  have k_le: μ / δ ≤ k := Int.le_ceil (μ / δ)
 
   let δ' := μ / k
-  have δ'_pos := div_pos δ_pos hk
-  /- have δ'_leq_δ : δ' ≤ δ := -/
+  have δ'_pos: δ' > 0 := div_pos hμ hk
+  have δ'_leq_δ: δ' ≤ δ := div_ceil_le μ δ hμ δ_pos
+
+  have hδ': ∀ x ∈ I, ∀ y ∈ I, dist x y < δ' → dist (f' x) (f' y) < ε' := 
+    weaker_uniform f' I δ δ' ε' hδ δ'_leq_δ
 
   sorry
 
