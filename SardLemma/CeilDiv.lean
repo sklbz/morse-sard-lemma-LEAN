@@ -2,7 +2,7 @@
 import Mathlib.Topology.MetricSpace.Basic
 import Mathlib.Data.Real.Basic
 
-namespace SardLemma
+namespace Inequalities
 
 lemma div_ceil_le (μ δ : ℝ) (hμ : μ > 0) (hδ : δ > 0) : μ / ⌈μ / δ⌉ ≤ δ := by
   have hk : (0 : ℝ) < (⌈μ / δ⌉ : ℤ) := Int.cast_pos.mpr (Int.ceil_pos.mpr (div_pos hμ hδ))
@@ -10,4 +10,4 @@ lemma div_ceil_le (μ δ : ℝ) (hμ : μ > 0) (hδ : δ > 0) : μ / ⌈μ / δ�
   rw [div_le_iff₀ hk]
   nlinarith [div_mul_cancel₀ μ (ne_of_gt hδ)]
 
-end SardLemma
+end Inequalities

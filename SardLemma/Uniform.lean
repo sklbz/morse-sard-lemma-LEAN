@@ -1,11 +1,10 @@
--- SardLemma/Monotonicity.lean
+-- SardLemma/Uniform.lean
 import Mathlib.Topology.MetricSpace.Basic
 import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.Analysis.Calculus.ContDiff.Deriv
 import Mathlib.Topology.UniformSpace.HeineCantor
 
 namespace Uniform
-
 
 def is_uniform_with (f : ℝ → ℝ) (I : Set ℝ) (ε δ : ℝ) : Prop :=
   ∀ x ∈ I, ∀ y ∈ I, dist x y < δ → dist (f x) (f y) < ε 
@@ -22,8 +21,6 @@ lemma uniform_derivative (f : ℝ → ℝ) (I : Set ℝ) (compact : IsCompact I)
   rw [Metric.uniformContinuousOn_iff] at hf'_uniform
   exact hf'_uniform
 
-
-
 lemma uniform_transitivity (f : ℝ → ℝ) (I : Set ℝ) (ε δ δ' : ℝ) (hδ : is_uniform_with f I ε δ) (hδ' : δ' ≤ δ) : is_uniform_with f I ε δ' := by
   intro x hx y hy h
   replace h: dist x y < δ := lt_of_lt_of_le h hδ'
@@ -31,6 +28,5 @@ lemma uniform_transitivity (f : ℝ → ℝ) (I : Set ℝ) (ε δ δ' : ℝ) (h�
   apply h
   apply hx 
   exact hy
-
 
 end Uniform
