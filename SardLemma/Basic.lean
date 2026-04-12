@@ -7,11 +7,11 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Order.Interval.Set.Defs
 import Mathlib.Data.Finset.Defs
 import SardLemma.CeilDiv
-import SardLemma.Monotonicity
+import SardLemma.Uniform
 
 open BigOperators
 open SardLemma
-open Monotonous
+open Uniform
 
 -- Définition d'un ensemble de mesure nulle
 def is_negligeable (A : Set ℝ) : Prop :=
@@ -24,27 +24,19 @@ lemma sard_lemma_compact (a b : ℝ) (f : ℝ → ℝ) (hμ : b - a > 0) (hf : C
   is_negligeable (f '' {x ∈ Set.Icc a b | deriv f x = 0}) := 
 by
   let I : Set ℝ := Set.Icc a b
-  let μ := b-a
+  let μ := b - a
   let f' : ℝ → ℝ := deriv f
 
   change μ > 0 at hμ
 
-  have hf'_cont : Continuous f' := ContDiff.continuous_deriv_one hf
-  have hf'_cont_on_I : ContinuousOn f' I := hf'_cont.continuousOn
+  have hI : IsCompact I := isCompact_Icc
 
-  have hI_compact : IsCompact I := isCompact_Icc
-
-  have hf'_uniform : UniformContinuousOn f' I := 
-    IsCompact.uniformContinuousOn_of_continuous hI_compact hf'_cont_on_I
-
-  rw [Metric.uniformContinuousOn_iff] at hf'_uniform
+  have hf'_uniform : is_uniform_metric f' I := uniform_derivative f I hI hf
 
   intro ε hε
 
   let ε' := ε / μ
-
   let hε' := div_pos hε hμ
-
 
   obtain ⟨δ, δ_pos, hδ⟩ := hf'_uniform ε' hε'
 
@@ -55,8 +47,8 @@ by
   have δ'_pos: δ' > 0 := div_pos hμ hk
   have δ'_leq_δ: δ' ≤ δ := div_ceil_le μ δ hμ δ_pos
 
-  have hδ': ∀ x ∈ I, ∀ y ∈ I, dist x y < δ' → dist (f' x) (f' y) < ε' := 
-    weaker_uniform f' I δ δ' ε' hδ δ'_leq_δ
+  have hδ': is_uniform_with f' I ε' δ' := 
+    uniform_transitivity f' I ε' δ δ' hδ δ'_leq_δ
 
   sorry
 
