@@ -1,11 +1,12 @@
+import Mathlib.Topology.UniformSpace.HeineCantor
 import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.Analysis.Calculus.ContDiff.Deriv
 import Mathlib.Analysis.Calculus.Deriv.Basic
-import Mathlib.Topology.UniformSpace.HeineCantor
 import Mathlib.Topology.MetricSpace.Basic
-import Mathlib.Data.Real.Basic
 import Mathlib.Order.Interval.Set.Defs
+import Mathlib.Tactic.Positivity
 import Mathlib.Data.Finset.Defs
+import Mathlib.Data.Real.Basic
 import SardLemma.CeilDiv
 import SardLemma.Uniform
 import SardLemma.Measure
@@ -41,6 +42,7 @@ by
   let k : ℤ := ⌈μ / δ⌉
   have hk : (k: ℝ) > 0 := Int.cast_pos.2 (Int.ceil_pos.2 (div_pos hμ δ_pos))
 
+
   let δ' := μ / k
   have δ'_pos: δ' > 0 := div_pos hμ hk
   have δ'_leq_δ: δ' ≤ δ := div_ceil_le μ δ hμ δ_pos
@@ -51,23 +53,53 @@ by
   let n : ℕ := k.toNat
   let subdiv (i : ℕ) : ℝ := a + i * δ'
   let J (i : ℕ) : Set ℝ := Icc (subdiv i) (subdiv (i+1))
-  have J_in_I : ∀ i, i ≤ n → J i ⊆ I := by
+
+  have subdiv_above_a : ∀ i ≤ n, a ≤ subdiv i := by
+    intro i hi
+    have term_pos : 0 ≤ i * δ' := by positivity
+    linarith
+
+  have subdiv_below_b : ∀ i ≤ n, subdiv i ≤ b := by
+    intro i hi
+    have term_maj : i * δ' ≤ n * δ' := by
+      gcongr
+    have eq : n * (μ / k) = μ := by
+      have hk_ne_zero : (k : ℝ) ≠ 0 := by positivity
+      have hk_eq_n : (k : ℝ) = (n : ℝ) := by
+        unfold n
+        have hk' : 0 < k := by 
+          simpa using hk
+        have h : 0 ≤ k := le_of_lt hk'
+        have h' : (k.toNat : ℤ) = k := by
+          simpa [hk, not_le.mpr hk']
+        exact_mod_cast h'.symm
+      rw [← hk_eq_n]
+      field_simp [hk_ne_zero]
+    rw [eq] at term_maj
+    have ineq : a + i * δ' ≤ a + μ := by
+      gcongr
+    unfold μ at ineq
+    replace ineq : a + i * δ' ≤ b := by
+      linarith
+    exact ineq
+  have subdiv_in_I : ∀ i ≤ n, subdiv i ∈ I := by
+    intro i hi
+    unfold I
+    refine Set.mem_Icc.mpr ?_
+    constructor
+    · exact subdiv_above_a i hi
+    · exact subdiv_below_b i hi
+
+  have J_in_I : ∀ i < n,  J i ⊆ I := by
     intro i
     intro hi
-    intro x
-    intro hx
-    apply?
-
-
-
-
-
+    refine Set.Icc_subset I ?_ (subdiv_in_I (i + 1) hi)
+    exact subdiv_in_I i (le_of_lt hi)
 
   sorry
 
-example (a b : ℝ) (sub : ℕ → ℝ) (n : ℕ) (ha: sub 0 = a) (hb : sub n = b) : Icc a b ⊆ ⋃ k ∈ range n, Icc (sub k) (sub (k+1))  := by
+example (a b : ℕ) (c : ℝ) (ha : a ≤ b) (hc : c > 0) : a * c ≤ b * c := by 
   apply?
-
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) : 
   is_negligeable (f '' {x | deriv f x = 0}) := 
