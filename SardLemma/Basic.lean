@@ -105,12 +105,14 @@ by
   have hφ : ∀ i < n, φ i → (∃ (a b : ℝ), (f '' (J i)) ⊆ (Icc a b) ∧ dist a b ≤ ε) := by
     intro i hi
     intro hJ
+    unfold φ at hJ
+    simp?
+    simp at hJ
+    obtain ⟨x, hx⟩ := hJ
+    obtain ⟨h₁x, h₂x⟩ := hx
     sorry
   
   sorry
-
-example (a b : ℕ) (c : ℝ) (ha : a ≤ b) (hc : c > 0) : a * c ≤ b * c := by 
-  apply?
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) : 
   is_negligeable (f '' {x | deriv f x = 0}) := 
