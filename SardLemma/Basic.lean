@@ -2,8 +2,10 @@ import Mathlib.Topology.UniformSpace.HeineCantor
 import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.Analysis.Calculus.ContDiff.Deriv
 import Mathlib.Analysis.Calculus.Deriv.Basic
+import Mathlib.Analysis.Calculus.MeanValue
 import Mathlib.Topology.MetricSpace.Basic
 import Mathlib.Order.Interval.Set.Defs
+import Mathlib.Analysis.Convex.Basic
 import Mathlib.Tactic.Positivity
 import Mathlib.Data.Finset.Defs
 import Mathlib.Data.Real.Basic
@@ -41,7 +43,6 @@ by
 
   let k : ℤ := ⌈μ / δ⌉
   have hk : (k: ℝ) > 0 := Int.cast_pos.2 (Int.ceil_pos.2 (div_pos hμ δ_pos))
-
 
   let δ' := μ / k
   have δ'_pos: δ' > 0 := div_pos hμ hk
@@ -144,6 +145,25 @@ by
     rw [h₂x] at h
     simpa using h
 
+  have hφ_f : ∀ i < n,
+    φ i → ∀ x ∈ J i, ∀ y ∈ J i,
+    |f x - f y| ≤ δ' * ε' := by
+      intro i hi hφ x hx y hy
+      have hxy : |x - y| ≤ δ' := dist_J i x y hx hy
+      have hf : ∀ x ∈ J i, DifferentiableAt ℝ f x := by
+        intro x hx
+        refine Differentiable.differentiableAt ?_
+        have h : (1 : WithTop ℕ∞) ≠ 0 := by
+          simp
+        exact hf.differentiable h
+      have f_lip : |f x - f y| ≤ ε' * |x - y| := Convex.norm_image_sub_le_of_norm_deriv_le 
+        hf
+        (fun x hx => by    
+          have := hφ_f' i hi hφ x hx
+          rwa [Real.norm_eq_abs])
+        (convex_Icc (subdiv i) (subdiv (i+1)))
+        hy hx
+      sorry
   sorry
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) : 
