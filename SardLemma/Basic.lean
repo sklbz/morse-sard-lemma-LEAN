@@ -100,14 +100,41 @@ by
     intro i hi
     exact uniform_restriction f' I (J i) ε' δ' hδ' (J_in_I i hi)
 
+  have dist_J (i : ℕ) 
+    (x y : ℝ) 
+    (hx : x ∈ J i)
+    (hy : y ∈ J i) : 
+    dist x y ≤ δ' := by
+    have hx := Set.mem_Icc.mp hx
+    have hy := Set.mem_Icc.mp hy
+    obtain ⟨h₁x, h₂x⟩ := hx
+    obtain ⟨h₁y, h₂y⟩ := hy
+
+    have h : |x - y| ≤ (subdiv (i+1) - subdiv i) := by
+      refine abs_sub_le_of_le_of_le ?_ ?_ ?_ ?_
+      · apply h₁x
+      · apply h₂x
+      · apply h₁y
+      · apply h₂y
+
+    have hδ : subdiv (i+1) - subdiv i = δ' := by
+      simp [subdiv]
+      linarith
+    simpa [dist, hδ] using h
+
   let φ (i : ℕ) : Bool := {x ∈ (J i) | f' x = 0} != ∅
 
   have hφ : ∀ i < n, φ i → (∃ (a b : ℝ), (f '' (J i)) ⊆ (Icc a b) ∧ dist a b ≤ ε) := by
-    intro i hi
-    intro hJ
+    intro i hi hJ
     unfold φ at hJ
-    simp?
-    simp at hJ
+    simp only [
+      bne_iff_ne,
+      ne_eq,
+      sep_eq_empty_iff_mem_false, 
+      not_forall,
+      exists_prop,
+      Classical.not_not
+    ] at hJ
     obtain ⟨x, hx⟩ := hJ
     obtain ⟨h₁x, h₂x⟩ := hx
     sorry
