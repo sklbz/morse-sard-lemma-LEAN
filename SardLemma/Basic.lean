@@ -96,7 +96,7 @@ by
     refine Set.Icc_subset I ?_ (subdiv_in_I (i + 1) hi)
     exact subdiv_in_I i (le_of_lt hi)
 
-  have f_uniform_on_J : ∀ i < n, is_uniform_with f' (J i) ε' δ' := by
+  have f'_uniform_on_J : ∀ i < n, is_uniform_with f' (J i) ε' δ' := by
     intro i hi
     exact uniform_restriction f' I (J i) ε' δ' hδ' (J_in_I i hi)
 
@@ -124,7 +124,7 @@ by
 
   let φ (i : ℕ) : Bool := {x ∈ (J i) | f' x = 0} != ∅
 
-  have hφ : ∀ i < n, φ i → (∃ (a b : ℝ), (f '' (J i)) ⊆ (Icc a b) ∧ dist a b ≤ ε) := by
+  have hφ_f' : ∀ i < n, φ i → ∀ x ∈ J i, |f' x| ≤ ε' := by
     intro i hi hJ
     unfold φ at hJ
     simp only [
@@ -137,8 +137,13 @@ by
     ] at hJ
     obtain ⟨x, hx⟩ := hJ
     obtain ⟨h₁x, h₂x⟩ := hx
-    sorry
-  
+    intro y hy
+
+    have h : |f' y - f' x| ≤ ε' := by
+      exact (f'_uniform_on_J i) hi y hy x h₁x (dist_J i y x hy h₁x)
+    rw [h₂x] at h
+    simpa using h
+
   sorry
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) : 
