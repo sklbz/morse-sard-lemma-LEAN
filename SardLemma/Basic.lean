@@ -82,6 +82,7 @@ by
     replace ineq : a + i * δ' ≤ b := by
       linarith
     exact ineq
+
   have subdiv_in_I : ∀ i ≤ n, subdiv i ∈ I := by
     intro i hi
     unfold I
@@ -91,11 +92,21 @@ by
     · exact subdiv_below_b i hi
 
   have J_in_I : ∀ i < n,  J i ⊆ I := by
-    intro i
-    intro hi
+    intro i hi
     refine Set.Icc_subset I ?_ (subdiv_in_I (i + 1) hi)
     exact subdiv_in_I i (le_of_lt hi)
 
+  have f_uniform_on_J : ∀ i < n, is_uniform_with f' (J i) ε' δ' := by
+    intro i hi
+    exact uniform_restriction f' I (J i) ε' δ' hδ' (J_in_I i hi)
+
+  let φ (i : ℕ) : Bool := {x ∈ (J i) | f' x = 0} != ∅
+
+  have hφ : ∀ i < n, φ i → (∃ (a b : ℝ), (f '' (J i)) ⊆ (Icc a b) ∧ dist a b ≤ ε) := by
+    intro i hi
+    intro hJ
+    sorry
+  
   sorry
 
 example (a b : ℕ) (c : ℝ) (ha : a ≤ b) (hc : c > 0) : a * c ≤ b * c := by 

@@ -29,4 +29,12 @@ lemma uniform_transitivity (f : ℝ → ℝ) (I : Set ℝ) (ε δ δ' : ℝ) (h�
   apply hx 
   exact hy
 
+lemma uniform_restriction (f : ℝ → ℝ) (I J : Set ℝ) (ε δ : ℝ) (hI: is_uniform_with f I ε δ) (hJ : J ⊆ I) : is_uniform_with f J ε δ := by
+  intro x hx
+  intro y hy
+  intro hdist
+  have hx: x ∈ I := Set.mem_of_subset_of_mem hJ hx
+  have hy: y ∈ I := Set.mem_of_subset_of_mem hJ hy
+  (expose_names; exact Metric.mem_ball.mp (hI x (hJ hx_1) y hy hdist))
+
 end Uniform
