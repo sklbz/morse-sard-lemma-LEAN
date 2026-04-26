@@ -14,15 +14,16 @@ import SardLemma.Subdivision
 import SardLemma.Interval
 import SardLemma.Uniform
 import SardLemma.Measure
+import SardLemma.Boolean
 
 open BigOperators
-open Finset
 open Set
 
 open Subdivision
 open Interval
 open Uniform
 open Measure
+open Boolean
 
 lemma sard_lemma_compact (a b : ℝ) (f : ℝ → ℝ) (hμ : b - a > 0) (hf : ContDiff ℝ 1 f) : 
   is_negligeable (f '' {x ∈ Icc a b | deriv f x = 0}) := 
@@ -102,19 +103,8 @@ by
 
   have hφ_f' : ∀ i < n, φ i → ∀ x ∈ J i, |f' x| ≤ ε' := by
     intro i hi hJ
-    unfold φ at hJ
-    simp only [
-      bne_iff_ne,
-      ne_eq,
-      sep_eq_empty_iff_mem_false, 
-      not_forall,
-      exists_prop,
-      Classical.not_not
-    ] at hJ
-    obtain ⟨x, hx⟩ := hJ
-    obtain ⟨h₁x, h₂x⟩ := hx
+    obtain ⟨x, h₁x, h₂x⟩ := exists_in_nonempty hJ
     intro y hy
-
     have h : |f' y - f' x| ≤ ε' := by
       exact (f'_uniform_on_J i) hi y hy x h₁x (dist_J hy h₁x)
     rw [h₂x] at h

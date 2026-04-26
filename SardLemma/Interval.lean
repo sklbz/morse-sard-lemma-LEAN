@@ -1,14 +1,5 @@
 -- Interval.lean
-import Mathlib.Topology.UniformSpace.HeineCantor
-import Mathlib.Analysis.Calculus.ContDiff.Basic
-import Mathlib.Analysis.Calculus.ContDiff.Deriv
-import Mathlib.Analysis.Calculus.Deriv.Basic
-import Mathlib.Analysis.Calculus.MeanValue
-import Mathlib.Topology.MetricSpace.Basic
 import Mathlib.Order.Interval.Set.Defs
-import Mathlib.Analysis.Convex.Basic
-import Mathlib.Tactic.Positivity
-import Mathlib.Data.Finset.Defs
 import Mathlib.Data.Real.Basic
 
 open Set
