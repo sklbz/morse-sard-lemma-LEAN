@@ -1,3 +1,4 @@
+-- Basic.lean
 import Mathlib.Topology.UniformSpace.HeineCantor
 import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.Analysis.Calculus.ContDiff.Deriv
@@ -10,14 +11,16 @@ import Mathlib.Tactic.Positivity
 import Mathlib.Data.Finset.Defs
 import Mathlib.Data.Real.Basic
 import SardLemma.Subdivision
+import SardLemma.Interval
 import SardLemma.Uniform
 import SardLemma.Measure
 
-open Set
-open Finset
 open BigOperators
+open Finset
+open Set
 
 open Subdivision
+open Interval
 open Uniform
 open Measure
 
@@ -84,23 +87,12 @@ by
     intro i hi
     exact uniform_restriction f' I (J i) ε' δ' hδ' (J_in_I i hi)
 
-  have dist_J (i : ℕ) 
-    (x y : ℝ) 
+  have dist_J {i : ℕ} 
+    {x y : ℝ} 
     (hx : x ∈ J i)
     (hy : y ∈ J i) : 
     dist x y ≤ δ' := by
-    have hx := Set.mem_Icc.mp hx
-    have hy := Set.mem_Icc.mp hy
-    obtain ⟨h₁x, h₂x⟩ := hx
-    obtain ⟨h₁y, h₂y⟩ := hy
-
-    have h : |x - y| ≤ (subdiv (i+1) - subdiv i) := by
-      refine abs_sub_le_of_le_of_le ?_ ?_ ?_ ?_
-      · apply h₁x
-      · apply h₂x
-      · apply h₁y
-      · apply h₂y
-
+    have h : |x - y| ≤ (subdiv (i+1) - subdiv i) := abs_sub_le_of_Icc hx hy
     have hδ : subdiv (i+1) - subdiv i = δ' := by
       simp [subdiv]
       linarith
@@ -124,7 +116,7 @@ by
     intro y hy
 
     have h : |f' y - f' x| ≤ ε' := by
-      exact (f'_uniform_on_J i) hi y hy x h₁x (dist_J i y x hy h₁x)
+      exact (f'_uniform_on_J i) hi y hy x h₁x (dist_J hy h₁x)
     rw [h₂x] at h
     simpa using h
 
@@ -132,7 +124,7 @@ by
     φ i → ∀ x ∈ J i, ∀ y ∈ J i,
     |f x - f y| ≤ δ' * ε' := by
       intro i hi hφ x hx y hy
-      have hxy : |x - y| ≤ δ' := dist_J i x y hx hy
+      have hxy : |x - y| ≤ δ' := dist_J hx hy
       have hf : ∀ x ∈ J i, DifferentiableAt ℝ f x := by
         intro x hx
         refine Differentiable.differentiableAt ?_
