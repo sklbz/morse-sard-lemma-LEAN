@@ -13,8 +13,8 @@ def is_uniform_metric (f : ℝ → ℝ) (I : Set ℝ) : Prop :=
   ∀ ε > 0, ∃ δ > 0, is_uniform_with f I ε δ
 
 lemma uniform_derivative
-  (f : ℝ → ℝ)
-  (I : Set ℝ)
+  {f : ℝ → ℝ}
+  {I : Set ℝ}
   (compact : IsCompact I)
   (hf : ContDiff ℝ 1 f) :
   is_uniform_metric (deriv f) I := by
@@ -38,9 +38,9 @@ lemma uniform_derivative
     exact this
 
 lemma uniform_transitivity
-  (f : ℝ → ℝ)
-  (I : Set ℝ)
-  (ε δ δ' : ℝ)
+  {f : ℝ → ℝ}
+  {I : Set ℝ}
+  {ε δ δ' : ℝ}
   (hδ : is_uniform_with f I ε δ)
   (hδ' : δ' ≤ δ) :
   is_uniform_with f I ε δ' := by
@@ -53,9 +53,9 @@ lemma uniform_transitivity
   exact hy
 
 lemma uniform_restriction
-  (f : ℝ → ℝ)
-  (I J : Set ℝ)
-  (ε δ : ℝ)
+  {f : ℝ → ℝ}
+  {I J : Set ℝ}
+  {ε δ : ℝ}
   (hI : is_uniform_with f I ε δ)
   (hJ : J ⊆ I) : 
   is_uniform_with f J ε δ := by

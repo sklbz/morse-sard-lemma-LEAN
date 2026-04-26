@@ -11,6 +11,7 @@ import Mathlib.Tactic.Positivity
 import Mathlib.Data.Finset.Defs
 import Mathlib.Data.Real.Basic
 import SardLemma.Subdivision
+import SardLemma.Derivative
 import SardLemma.Interval
 import SardLemma.Uniform
 import SardLemma.Measure
@@ -20,6 +21,7 @@ open BigOperators
 open Set
 
 open Subdivision
+open Derivative
 open Interval
 open Uniform
 open Measure
@@ -36,7 +38,7 @@ by
 
   have hI : IsCompact I := isCompact_Icc
 
-  have hf'_uniform : is_uniform_metric f' I := uniform_derivative f I hI hf
+  have hf'_uniform : is_uniform_metric f' I := uniform_derivative hI hf
 
   intro ε hε
 
@@ -53,7 +55,7 @@ by
   have δ'_leq_δ: δ' ≤ δ := div_ceil_le hμ δ_pos
 
   have hδ': is_uniform_with f' I ε' δ' := 
-    uniform_transitivity f' I ε' δ δ' hδ δ'_leq_δ
+    uniform_transitivity hδ δ'_leq_δ
 
   let n : ℕ := k.toNat
   let subdiv (i : ℕ) : ℝ := a + i * δ'
@@ -83,10 +85,13 @@ by
     intro i hi
     refine Set.Icc_subset I ?_ (subdiv_in_I (i + 1) hi)
     exact subdiv_in_I i (le_of_lt hi)
+  
+  lemma cover {x : ℝ} (hx : x ∈ I) : ∃ i < n, x ∈ (J i) := by
+    apply?
 
   have f'_uniform_on_J : ∀ i < n, is_uniform_with f' (J i) ε' δ' := by
     intro i hi
-    exact uniform_restriction f' I (J i) ε' δ' hδ' (J_in_I i hi)
+    exact uniform_restriction hδ' (J_in_I i hi)
 
   have dist_J {i : ℕ} 
     {x y : ℝ} 
@@ -102,36 +107,42 @@ by
   let φ (i : ℕ) : Bool := {x ∈ (J i) | f' x = 0} != ∅
 
   have hφ_f' : ∀ i < n, φ i → ∀ x ∈ J i, |f' x| ≤ ε' := by
-    intro i hi hJ
+    intro i hi hJ y hy
     obtain ⟨x, h₁x, h₂x⟩ := exists_in_nonempty hJ
-    intro y hy
-    have h : |f' y - f' x| ≤ ε' := by
-      exact (f'_uniform_on_J i) hi y hy x h₁x (dist_J hy h₁x)
-    rw [h₂x] at h
-    simpa using h
+    have h : |f' y - f' x| ≤ ε' := 
+      (f'_uniform_on_J i) hi y hy x h₁x (dist_J hy h₁x)
+    simpa [h₂x] using h
 
   have hφ_f : ∀ i < n,
     φ i → ∀ x ∈ J i, ∀ y ∈ J i,
     |f x - f y| ≤ δ' * ε' := by
       intro i hi hφ x hx y hy
       have hxy : |x - y| ≤ δ' := dist_J hx hy
-      have hf : ∀ x ∈ J i, DifferentiableAt ℝ f x := by
-        intro x hx
-        refine Differentiable.differentiableAt ?_
-        have h : (1 : WithTop ℕ∞) ≠ 0 := by
-          simp
-        exact hf.differentiable h
-      have f_lip : |f x - f y| ≤ ε' * |x - y| := Convex.norm_image_sub_le_of_norm_deriv_le 
-        hf
-        (fun x hx => by    
-          have := hφ_f' i hi hφ x hx
-          rwa [Real.norm_eq_abs])
-        (convex_Icc (subdiv i) (subdiv (i+1)))
-        hy hx
-      sorry
+      have hf_J : ∀ x ∈ J i, DifferentiableAt ℝ f x := 
+        contdiff_imp_diff_restriction hf
+      have f_lip : |f x - f y| ≤ ε' * |x - y| := 
+        Convex.norm_image_sub_le_of_norm_deriv_le 
+          hf_J
+          (fun x hx => by    
+            have := hφ_f' i hi hφ x hx
+            rwa [Real.norm_eq_abs])
+          (convex_Icc (subdiv i) (subdiv (i+1)))
+          hy hx
+      nlinarith
+
+  let A := {x ∈ I | f' x = 0}
+  have K := {i < n | φ i}
+
+  have A_sub_I : A ⊆ I := by
+    intro x ⟨ h, _ ⟩
+    exact h
+
+  have hA : A ⊆ ⋃ i ∈ K, J i := by
+    intro x ⟨ h, hx ⟩
+
   sorry
 
-theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) : 
+theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) :
   is_negligeable (f '' {x | deriv f x = 0}) := 
 by 
   sorry
