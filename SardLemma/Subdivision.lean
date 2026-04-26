@@ -17,7 +17,7 @@ lemma nat_eq_toNat {k : ℤ} (hk : (k : ℝ) > 0) : (k : ℝ) = (k.toNat : ℝ) 
   have h' : (k.toNat : ℤ) = k := by simpa [not_le.mpr hk']
   exact_mod_cast h'.symm
 
-lemma toNat_mul_div_eq 
+lemma toNat_mul_div_eq
   {k : ℤ}
   {μ : ℝ}
   (hk : (k : ℝ) > 0) : 
@@ -28,5 +28,21 @@ by
   rw [← hk_eq_n]
   field_simp [hk_ne_zero]
 
+lemma subdivision_intervals_subset 
+    {a b : ℝ} {k : ℤ}
+    (n : ℕ) (hk : (k : ℝ) > 0) (hμ : b - a > 0) :
+    let δ' := (b - a) / k
+    let subdiv := fun i : ℕ => a + i * δ'
+    let J := fun i : ℕ => Set.Icc (subdiv i) (subdiv (i + 1))
+    ∀ i < n, J i ⊆ Set.Icc a b := by
+  intro δ' subdiv J i hi
+  intro x hx
+  have hx := Set.mem_Icc.mp hx
+  constructor
+  · have : 0 ≤ i * δ' := by positivity
+    linarith [hx.1]
+  · have term_maj : i * δ' ≤ n * δ' := by gcongr
+    have eq : n * ((b - a) / k) = b - a := toNat_mul_div_eq hk
+    linarith [hx.2]
 
 end Subdivision

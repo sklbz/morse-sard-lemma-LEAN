@@ -86,9 +86,6 @@ by
     refine Set.Icc_subset I ?_ (subdiv_in_I (i + 1) hi)
     exact subdiv_in_I i (le_of_lt hi)
   
-  lemma cover {x : ℝ} (hx : x ∈ I) : ∃ i < n, x ∈ (J i) := by
-    apply?
-
   have f'_uniform_on_J : ∀ i < n, is_uniform_with f' (J i) ε' δ' := by
     intro i hi
     exact uniform_restriction hδ' (J_in_I i hi)
