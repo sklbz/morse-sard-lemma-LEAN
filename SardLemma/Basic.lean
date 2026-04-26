@@ -61,34 +61,11 @@ by
   let subdiv (i : ℕ) : ℝ := a + i * δ'
   let J (i : ℕ) : Set ℝ := Icc (subdiv i) (subdiv (i+1))
 
-  have subdiv_above_a : ∀ i ≤ n, a ≤ subdiv i := by
-    intro i hi
-    have term_pos : 0 ≤ i * δ' := by positivity
-    linarith
-
-  have subdiv_below_b : ∀ i ≤ n, subdiv i ≤ b := by
-    intro i hi
-    have term_maj : i * δ' ≤ n * δ' := by
-      gcongr
-    have eq : n * (μ / k) = μ := toNat_mul_div_eq hk
-    linarith
-
-  have subdiv_in_I : ∀ i ≤ n, subdiv i ∈ I := by
-    intro i hi
-    unfold I
-    refine Set.mem_Icc.mpr ?_
-    constructor
-    · exact subdiv_above_a i hi
-    · exact subdiv_below_b i hi
-
-  have J_in_I : ∀ i < n,  J i ⊆ I := by
-    intro i hi
-    refine Set.Icc_subset I ?_ (subdiv_in_I (i + 1) hi)
-    exact subdiv_in_I i (le_of_lt hi)
+  have J_in_I {i : ℕ} (hi : i < n) : J i ⊆ I := 
+    subdivision_intervals_subset hk hμ hi
   
-  have f'_uniform_on_J : ∀ i < n, is_uniform_with f' (J i) ε' δ' := by
-    intro i hi
-    exact uniform_restriction hδ' (J_in_I i hi)
+  have f'_uniform_on_J {i : ℕ} (hi : i < n) : is_uniform_with f' (J i) ε' δ' :=
+    uniform_restriction hδ' (J_in_I hi)
 
   have dist_J {i : ℕ} 
     {x y : ℝ} 
@@ -107,7 +84,7 @@ by
     intro i hi hJ y hy
     obtain ⟨x, h₁x, h₂x⟩ := exists_in_nonempty hJ
     have h : |f' y - f' x| ≤ ε' := 
-      (f'_uniform_on_J i) hi y hy x h₁x (dist_J hy h₁x)
+      f'_uniform_on_J  hi y hy x h₁x (dist_J hy h₁x)
     simpa [h₂x] using h
 
   have hφ_f : ∀ i < n,
@@ -136,6 +113,7 @@ by
 
   have hA : A ⊆ ⋃ i ∈ K, J i := by
     intro x ⟨ h, hx ⟩
+    sorry
 
   sorry
 

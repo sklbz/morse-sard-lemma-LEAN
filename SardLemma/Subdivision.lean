@@ -28,21 +28,42 @@ by
   rw [← hk_eq_n]
   field_simp [hk_ne_zero]
 
-lemma subdivision_intervals_subset 
-    {a b : ℝ} {k : ℤ}
-    (n : ℕ) (hk : (k : ℝ) > 0) (hμ : b - a > 0) :
+lemma subdivision_bounds
+    {a b : ℝ} {k : ℤ} {i : ℕ}
+    (hk : (k : ℝ) > 0) (hμ : b - a > 0) (hi : i ≤ k.toNat) :
+    let δ := (b - a) / k
+    let subdiv := a + i * δ
+    let I := Set.Icc a b
+    subdiv ∈ I := by
+  intro δ subdiv I
+  let n := k.toNat
+  let μ : ℝ := b - a
+  have subdiv_above_a : a ≤ subdiv := by
+    have term_pos : 0 ≤ i * δ := by positivity
+    linarith
+  have subdiv_below_b : subdiv ≤ b := by
+    have term_maj : i * δ ≤ n * δ := by
+      gcongr
+    have eq : n * (μ / k) = μ := toNat_mul_div_eq hk
+    linarith
+  unfold I
+  refine Set.mem_Icc.mpr ?_
+  constructor
+  · exact subdiv_above_a
+  · exact subdiv_below_b
+  
+lemma subdivision_intervals_subset
+    {a b : ℝ} {k : ℤ} {i : ℕ}
+    (hk : (k : ℝ) > 0) (hμ : b - a > 0) (hi : i < k.toNat) :
     let δ' := (b - a) / k
     let subdiv := fun i : ℕ => a + i * δ'
     let J := fun i : ℕ => Set.Icc (subdiv i) (subdiv (i + 1))
-    ∀ i < n, J i ⊆ Set.Icc a b := by
-  intro δ' subdiv J i hi
-  intro x hx
-  have hx := Set.mem_Icc.mp hx
-  constructor
-  · have : 0 ≤ i * δ' := by positivity
-    linarith [hx.1]
-  · have term_maj : i * δ' ≤ n * δ' := by gcongr
-    have eq : n * ((b - a) / k) = b - a := toNat_mul_div_eq hk
-    linarith [hx.2]
+    let I := Set.Icc a b
+    J i ⊆ I := by
+  intro δ' subdiv J I
+  have hi_plus: i + 1 ≤ k.toNat := by
+    nlinarith
+  refine Set.Icc_subset I ?_ (subdivision_bounds hk hμ hi_plus)
+  exact subdivision_bounds hk hμ (le_of_lt hi)
 
 end Subdivision
