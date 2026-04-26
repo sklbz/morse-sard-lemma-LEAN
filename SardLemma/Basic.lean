@@ -9,7 +9,7 @@ import Mathlib.Analysis.Convex.Basic
 import Mathlib.Tactic.Positivity
 import Mathlib.Data.Finset.Defs
 import Mathlib.Data.Real.Basic
-import SardLemma.CeilDiv
+import SardLemma.Subdivision
 import SardLemma.Uniform
 import SardLemma.Measure
 
@@ -17,7 +17,7 @@ open Set
 open Finset
 open BigOperators
 
-open Inequalities
+open Subdivision
 open Uniform
 open Measure
 
@@ -46,7 +46,7 @@ by
 
   let δ' := μ / k
   have δ'_pos: δ' > 0 := div_pos hμ hk
-  have δ'_leq_δ: δ' ≤ δ := div_ceil_le μ δ hμ δ_pos
+  have δ'_leq_δ: δ' ≤ δ := div_ceil_le hμ δ_pos
 
   have hδ': is_uniform_with f' I ε' δ' := 
     uniform_transitivity f' I ε' δ δ' hδ δ'_leq_δ
@@ -64,25 +64,8 @@ by
     intro i hi
     have term_maj : i * δ' ≤ n * δ' := by
       gcongr
-    have eq : n * (μ / k) = μ := by
-      have hk_ne_zero : (k : ℝ) ≠ 0 := by positivity
-      have hk_eq_n : (k : ℝ) = (n : ℝ) := by
-        unfold n
-        have hk' : 0 < k := by 
-          simpa using hk
-        have h : 0 ≤ k := le_of_lt hk'
-        have h' : (k.toNat : ℤ) = k := by
-          simpa [hk, not_le.mpr hk']
-        exact_mod_cast h'.symm
-      rw [← hk_eq_n]
-      field_simp [hk_ne_zero]
-    rw [eq] at term_maj
-    have ineq : a + i * δ' ≤ a + μ := by
-      gcongr
-    unfold μ at ineq
-    replace ineq : a + i * δ' ≤ b := by
-      linarith
-    exact ineq
+    have eq : n * (μ / k) = μ := toNat_mul_div_eq hk
+    linarith
 
   have subdiv_in_I : ∀ i ≤ n, subdiv i ∈ I := by
     intro i hi
