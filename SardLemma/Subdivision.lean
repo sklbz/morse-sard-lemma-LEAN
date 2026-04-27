@@ -1,6 +1,5 @@
 -- SardLemma/Subdivision.lean
 import Mathlib.Topology.MetricSpace.Basic
-import Mathlib.Tactic.Positivity
 import Mathlib.Data.Real.Basic
 
 namespace Subdivision

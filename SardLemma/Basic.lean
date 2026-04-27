@@ -2,12 +2,8 @@
 import Mathlib.Topology.UniformSpace.HeineCantor
 import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.Analysis.Calculus.ContDiff.Deriv
-import Mathlib.Analysis.Calculus.Deriv.Basic
-import Mathlib.Analysis.Calculus.MeanValue
-import Mathlib.Topology.MetricSpace.Basic
 import Mathlib.Order.Interval.Set.Defs
 import Mathlib.Analysis.Convex.Basic
-import Mathlib.Tactic.Positivity
 import Mathlib.Data.Finset.Defs
 import Mathlib.Data.Real.Basic
 import SardLemma.Subdivision
@@ -65,7 +61,6 @@ by
     let a : ℝ := subdiv i; let b : ℝ := subdiv (i + 1)
     have h : Convex ℝ (Icc a b) := convex_Icc (subdiv i) (subdiv (i + 1))
     exact h
-
 
   have J_in_I {i : ℕ} (hi : i < n) : J i ⊆ I := 
     subdivision_intervals_subset hk hμ hi
