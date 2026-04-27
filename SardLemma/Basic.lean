@@ -11,7 +11,7 @@ import Mathlib.Tactic.Positivity
 import Mathlib.Data.Finset.Defs
 import Mathlib.Data.Real.Basic
 import SardLemma.Subdivision
-import SardLemma.Derivative
+import SardLemma.Lipschitz
 import SardLemma.Interval
 import SardLemma.Uniform
 import SardLemma.Measure
@@ -21,7 +21,7 @@ open BigOperators
 open Set
 
 open Subdivision
-open Derivative
+open Lipschitz
 open Interval
 open Uniform
 open Measure
@@ -61,6 +61,12 @@ by
   let subdiv (i : ℕ) : ℝ := a + i * δ'
   let J (i : ℕ) : Set ℝ := Icc (subdiv i) (subdiv (i+1))
 
+  have hJ_convex {i : ℕ} : Convex ℝ (J i) := by
+    let a : ℝ := subdiv i; let b : ℝ := subdiv (i + 1)
+    have h : Convex ℝ (Icc a b) := convex_Icc (subdiv i) (subdiv (i + 1))
+    exact h
+
+
   have J_in_I {i : ℕ} (hi : i < n) : J i ⊆ I := 
     subdivision_intervals_subset hk hμ hi
   
@@ -80,8 +86,15 @@ by
 
   let φ (i : ℕ) : Bool := {x ∈ (J i) | f' x = 0} != ∅
 
-  have hφ_f' : ∀ i < n, φ i → ∀ x ∈ J i, |f' x| ≤ ε' := by
-    intro i hi hJ y hy
+  have hφ_f' {i : ℕ} (hi : i < n) (hJ : φ i) 
+    {x : ℝ} (hx : x ∈ J i) : |f' x| ≤ ε' := by
+    obtain ⟨critical_point, h₁, h₂⟩ := exists_in_nonempty hJ
+    have h : |f' x - f' critical_point| ≤ ε' := 
+      f'_uniform_on_J  hi x hx critical_point h₁ (dist_J hx h₁)
+    simpa [h₂] using h
+
+  have hφ_f' {i : ℕ} (hi : i < n) (hJ : φ i) :∀ x ∈ J i, |f' x| ≤ ε' := by
+    intro y hy
     obtain ⟨x, h₁x, h₂x⟩ := exists_in_nonempty hJ
     have h : |f' y - f' x| ≤ ε' := 
       f'_uniform_on_J  hi y hy x h₁x (dist_J hy h₁x)
@@ -92,16 +105,8 @@ by
     |f x - f y| ≤ δ' * ε' := by
       intro i hi hφ x hx y hy
       have hxy : |x - y| ≤ δ' := dist_J hx hy
-      have hf_J : ∀ x ∈ J i, DifferentiableAt ℝ f x := 
-        contdiff_imp_diff_restriction hf
-      have f_lip : |f x - f y| ≤ ε' * |x - y| := 
-        Convex.norm_image_sub_le_of_norm_deriv_le 
-          hf_J
-          (fun x hx => by    
-            have := hφ_f' i hi hφ x hx
-            rwa [Real.norm_eq_abs])
-          (convex_Icc (subdiv i) (subdiv (i+1)))
-          hy hx
+      have lip_ineq : |f x - f y| ≤ ε' * |x - y| :=
+        deriv_bound_imp_lip hf (hφ_f' hi hφ) hJ_convex hy hx
       nlinarith
 
   let A := {x ∈ I | f' x = 0}
