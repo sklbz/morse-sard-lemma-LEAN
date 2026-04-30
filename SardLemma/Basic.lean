@@ -65,6 +65,7 @@ by
   have J_in_I {i : ℕ} (hi : i < n) : J i ⊆ I :=
     subdivision_intervals_subset hk hμ hi
 
+
   have f'_uniform_on_J {i : ℕ} (hi : i < n) : is_uniform_with f' (J i) ε' δ' :=
     uniform_restriction hδ' (J_in_I hi)
 
@@ -81,14 +82,7 @@ by
 
   let φ (i : ℕ) : Bool := {x ∈ (J i) | f' x = 0} != ∅
 
-  have hφ_f' {i : ℕ} (hi : i < n) (hJ : φ i)
-    {x : ℝ} (hx : x ∈ J i) : |f' x| ≤ ε' := by
-    obtain ⟨critical_point, h₁, h₂⟩ := exists_in_nonempty hJ
-    have h : |f' x - f' critical_point| ≤ ε' :=
-      f'_uniform_on_J  hi x hx critical_point h₁ (dist_J hx h₁)
-    simpa [h₂] using h
-
-  have hφ_f' {i : ℕ} (hi : i < n) (hJ : φ i) :∀ x ∈ J i, |f' x| ≤ ε' := by
+  have hφ_f' {i : ℕ} (hi : i < n) (hJ : φ i) : ∀ x ∈ J i, |f' x| ≤ ε' := by
     intro y hy
     obtain ⟨x, h₁x, h₂x⟩ := exists_in_nonempty hJ
     have h : |f' y - f' x| ≤ ε' :=
@@ -104,16 +98,51 @@ by
         deriv_bound_imp_lip hf (hφ_f' hi hφ) hJ_convex hy hx
       nlinarith
 
-  let A := {x ∈ I | f' x = 0}
-  have K := {i < n | φ i}
+  have J_covers_I : I = ⋃ i < n, J i := subdivision_covers hk hμ
+  have hJ_covers_I {x : ℝ} (hx : x ∈ I) : ∃ i < n, x ∈ J i := by
+    simp only [J_covers_I, mem_iUnion, exists_prop] at hx
+    exact hx
 
-  have A_sub_I : A ⊆ I := by
-    intro x ⟨ h, _ ⟩
-    exact h
+  let A := {x ∈ I | f' x = 0}
+  let K := {i < n | φ i}
+
+  have A_eq_A : {x ∈ I | deriv f x = 0} = A := by
+    unfold A
+    unfold f'
+    rfl
+
+  rw [A_eq_A]
+  clear A_eq_A
+
+  /- have A_sub_I : A ⊆ I := by -/
+  /-   intro x ⟨ h, _ ⟩ -/
+  /-   exact h -/
 
   have hA : A ⊆ ⋃ i ∈ K, J i := by
     intro x ⟨ h, hx ⟩
-    sorry
+    obtain ⟨i, h, hi ⟩:= hJ_covers_I h
+    have hφ : φ i := by
+      unfold φ
+      simp only [
+        bne_iff_ne,
+        ne_eq,
+        sep_eq_empty_iff_mem_false,
+        not_forall,
+        Decidable.not_not]
+      exact ⟨x, hi, hx⟩
+    unfold K
+    simp only [mem_setOf_eq, mem_iUnion, exists_prop, and_assoc]
+    exact ⟨i, h, hφ, hi⟩
+
+  have h_imU: f '' ⋃ i ∈ K, J i = ⋃ i ∈ K, f '' J i := by
+    exact image_iUnion₂ f fun i j ↦ J i
+
+  have h_imA : f '' A ⊆ ⋃ i ∈ K, f '' J i := by
+    suffices h : f '' A ⊆ f '' ⋃ i ∈ K, J i by
+      exact subset_of_subset_of_eq h h_imU
+    exact image_mono hA
+
+  clear h_imU
 
   sorry
 

@@ -1,6 +1,7 @@
 -- SardLemma/Subdivision.lean
 import Mathlib.Topology.MetricSpace.Basic
 import Mathlib.Data.Real.Basic
+import Mathlib.Order.Basic
 
 open Set
 
@@ -104,10 +105,10 @@ lemma subdivision_covers
   have hsub : growing sub := by
     intro i
     unfold sub
-    simp
+    simp only [Nat.cast_add, Nat.cast_one, add_le_add_iff_left]
     gcongr
     · simp
-  have h := subdivision_union n hsub
+  have h := subdivision_union k.toNat hsub
   have h0 : a = sub 0 := by
     unfold sub
     simp
@@ -121,7 +122,7 @@ lemma subdivision_covers
       field_simp
       simp
       constructor
-      · exact sub_eq_neg_add b a
+      · simp only [sub_eq_neg_add]
     rw [h1, h2]
     rw [← nat_eq_toNat hk]
     rw [← @AddSemigroup.add_assoc]
@@ -129,8 +130,32 @@ lemma subdivision_covers
     field_simp
     simp
   rw [h0, hn]
-  repeat rw [Int.toNat_of_nonneg hk]
-  simp [Nat.cast_natCast]
-  rw [Nat.lt_succ_iff]
+  simp only [Int.lt_toNat]
+  have hlt_le (n : ℕ) : (n : ℕ) < k ↔ (n : ℕ) ≤ k - 1 := by
+    simpa [sub_eq_add_neg, add_comm, add_left_comm, add_assoc]
+      using (Int.lt_add_one_iff (a := (n : ℤ)) (b := k - 1))
+  simp only [hlt_le]
+  have hk : (k : ℤ) > 0 := by exact_mod_cast hk
+  have hk : 0 < k := GT.gt.lt hk
+  have hk : 0 ≤ k - 1 := Int.sub_nonneg_of_le hk
+  have hk_nat : k.toNat - 1 + 1 = k.toNat := by omega
+  have h_union := subdivision_union (k - 1).toNat hsub
+  simp only [Int.pred_toNat] at h_union
+  rw [hk_nat] at h_union
+  have hk_eq_nat : k = (k.toNat: ℤ) := by omega
+  change Icc (sub 0) (sub k.toNat) = ⋃ i : ℕ, ⋃ (_ : (i : ℤ) ≤ k - 1), Icc (sub i) (sub (i + 1))
+  rw [← hk_nat]
+  convert h_union using 2
+  · congr 1
+  · have : k.toNat - 1 = (k - 1).toNat := by omega
+    simp_rw [this]
+    ext i
+    simp only [mem_iUnion, mem_Icc, exists_and_left, exists_prop, Int.pred_toNat,
+      and_congr_right_iff, and_congr_left_iff]
+    omega
+
+
+example {k : ℤ} (hk : 0 < (k : ℤ) ) : 0 ≤ k - 1 := by
+  exact Int.sub_nonneg_of_le hk
 
 end Subdivision
