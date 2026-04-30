@@ -23,8 +23,8 @@ open Uniform
 open Measure
 open Boolean
 
-lemma sard_lemma_compact (a b : ℝ) (f : ℝ → ℝ) (hμ : b - a > 0) (hf : ContDiff ℝ 1 f) : 
-  is_negligeable (f '' {x ∈ Icc a b | deriv f x = 0}) := 
+lemma sard_lemma_compact (a b : ℝ) (f : ℝ → ℝ) (hμ : b - a > 0) (hf : ContDiff ℝ 1 f) :
+  is_negligeable (f '' {x ∈ Icc a b | deriv f x = 0}) :=
 by
   let I : Set ℝ := Icc a b
   let μ := b - a
@@ -50,7 +50,7 @@ by
   have δ'_pos: δ' > 0 := div_pos hμ hk
   have δ'_leq_δ: δ' ≤ δ := div_ceil_le hμ δ_pos
 
-  have hδ': is_uniform_with f' I ε' δ' := 
+  have hδ': is_uniform_with f' I ε' δ' :=
     uniform_transitivity hδ δ'_leq_δ
 
   let n : ℕ := k.toNat
@@ -62,16 +62,16 @@ by
     have h : Convex ℝ (Icc a b) := convex_Icc (subdiv i) (subdiv (i + 1))
     exact h
 
-  have J_in_I {i : ℕ} (hi : i < n) : J i ⊆ I := 
+  have J_in_I {i : ℕ} (hi : i < n) : J i ⊆ I :=
     subdivision_intervals_subset hk hμ hi
-  
+
   have f'_uniform_on_J {i : ℕ} (hi : i < n) : is_uniform_with f' (J i) ε' δ' :=
     uniform_restriction hδ' (J_in_I hi)
 
-  have dist_J {i : ℕ} 
-    {x y : ℝ} 
+  have dist_J {i : ℕ}
+    {x y : ℝ}
     (hx : x ∈ J i)
-    (hy : y ∈ J i) : 
+    (hy : y ∈ J i) :
     dist x y ≤ δ' := by
     have h : |x - y| ≤ (subdiv (i+1) - subdiv i) := abs_sub_le_of_Icc hx hy
     have hδ : subdiv (i+1) - subdiv i = δ' := by
@@ -81,17 +81,17 @@ by
 
   let φ (i : ℕ) : Bool := {x ∈ (J i) | f' x = 0} != ∅
 
-  have hφ_f' {i : ℕ} (hi : i < n) (hJ : φ i) 
+  have hφ_f' {i : ℕ} (hi : i < n) (hJ : φ i)
     {x : ℝ} (hx : x ∈ J i) : |f' x| ≤ ε' := by
     obtain ⟨critical_point, h₁, h₂⟩ := exists_in_nonempty hJ
-    have h : |f' x - f' critical_point| ≤ ε' := 
+    have h : |f' x - f' critical_point| ≤ ε' :=
       f'_uniform_on_J  hi x hx critical_point h₁ (dist_J hx h₁)
     simpa [h₂] using h
 
   have hφ_f' {i : ℕ} (hi : i < n) (hJ : φ i) :∀ x ∈ J i, |f' x| ≤ ε' := by
     intro y hy
     obtain ⟨x, h₁x, h₂x⟩ := exists_in_nonempty hJ
-    have h : |f' y - f' x| ≤ ε' := 
+    have h : |f' y - f' x| ≤ ε' :=
       f'_uniform_on_J  hi y hy x h₁x (dist_J hy h₁x)
     simpa [h₂x] using h
 
@@ -118,6 +118,6 @@ by
   sorry
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) :
-  is_negligeable (f '' {x | deriv f x = 0}) := 
-by 
+  is_negligeable (f '' {x | deriv f x = 0}) :=
+by
   sorry
