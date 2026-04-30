@@ -144,7 +144,19 @@ by
       exact subset_of_subset_of_eq h h_imU
     exact image_mono hA
 
-  clear h_imU
+  clear h_imU hA
+
+  suffices h :
+    ∃ a b : ℕ → ℝ, (∀ (n : ℕ), a n ≤ b n) ∧
+    ⋃ i ∈ K, f '' J i ⊆ ⋃ n, Icc (a n) (b n) ∧
+    ∀ (n : ℕ), ∑ k ∈ Finset.range (n + 1), (b k - a k) ≤ ε by
+    exact subset_measure_maj h_imA h
+
+  clear A h_imA
+
+  have hJ {i : ℕ} (hi : i ∈ K) :
+    ∃ x y : ℝ, x ≤ y ∧ |x - y| ≤ δ' * ε ∧ f '' J i ⊆ Icc x y := by
+    apply?
 
   sorry
 
