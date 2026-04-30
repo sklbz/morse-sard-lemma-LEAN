@@ -34,14 +34,14 @@ by
 
   have hI : IsCompact I := isCompact_Icc
 
-  have hf'_uniform : is_uniform_metric f' I := uniform_derivative hI hf
+  have f'_uniform : is_uniform_metric f' I := uniform_derivative hI hf
 
   intro ε hε
 
   let ε' := ε / μ
   let hε' := div_pos hε hμ
 
-  obtain ⟨δ, δ_pos, hδ⟩ := hf'_uniform ε' hε'
+  obtain ⟨δ, δ_pos, hδ⟩ := f'_uniform ε' hε'
 
   let k : ℤ := ⌈μ / δ⌉
   have hk : (k: ℝ) > 0 := Int.cast_pos.2 (Int.ceil_pos.2 (div_pos hμ δ_pos))
@@ -53,11 +53,13 @@ by
   have hδ': is_uniform_with f' I ε' δ' :=
     uniform_transitivity hδ δ'_leq_δ
 
+  clear δ'_leq_δ δ_pos
+
   let n : ℕ := k.toNat
   let subdiv (i : ℕ) : ℝ := a + i * δ'
   let J (i : ℕ) : Set ℝ := Icc (subdiv i) (subdiv (i+1))
 
-  have hJ_convex {i : ℕ} : Convex ℝ (J i) := by
+  have J_convex {i : ℕ} : Convex ℝ (J i) := by
     let a : ℝ := subdiv i; let b : ℝ := subdiv (i + 1)
     have h : Convex ℝ (Icc a b) := convex_Icc (subdiv i) (subdiv (i + 1))
     exact h
@@ -65,9 +67,10 @@ by
   have J_in_I {i : ℕ} (hi : i < n) : J i ⊆ I :=
     subdivision_intervals_subset hk hμ hi
 
-
   have f'_uniform_on_J {i : ℕ} (hi : i < n) : is_uniform_with f' (J i) ε' δ' :=
     uniform_restriction hδ' (J_in_I hi)
+
+  clear hδ hδ'
 
   have dist_J {i : ℕ}
     {x y : ℝ}
@@ -95,13 +98,16 @@ by
       intro i hi hφ x hx y hy
       have hxy : |x - y| ≤ δ' := dist_J hx hy
       have lip_ineq : |f x - f y| ≤ ε' * |x - y| :=
-        deriv_bound_imp_lip hf (hφ_f' hi hφ) hJ_convex hy hx
+        deriv_bound_imp_lip hf (hφ_f' hi hφ) J_convex hy hx
       nlinarith
 
-  have J_covers_I : I = ⋃ i < n, J i := subdivision_covers hk hμ
-  have hJ_covers_I {x : ℝ} (hx : x ∈ I) : ∃ i < n, x ∈ J i := by
-    simp only [J_covers_I, mem_iUnion, exists_prop] at hx
-    exact hx
+  clear J_in_I J_convex dist_J hφ_f' f'_uniform f'_uniform_on_J
+
+  have J_covers_I {x : ℝ} (hx : x ∈ I) : ∃ i < n, x ∈ J i := by
+    suffices h : I = ⋃ i < n, J i by
+      simp only [h, mem_iUnion, exists_prop] at hx
+      exact hx
+    exact subdivision_covers hk hμ
 
   let A := {x ∈ I | f' x = 0}
   let K := {i < n | φ i}
@@ -114,13 +120,9 @@ by
   rw [A_eq_A]
   clear A_eq_A
 
-  /- have A_sub_I : A ⊆ I := by -/
-  /-   intro x ⟨ h, _ ⟩ -/
-  /-   exact h -/
-
   have hA : A ⊆ ⋃ i ∈ K, J i := by
     intro x ⟨ h, hx ⟩
-    obtain ⟨i, h, hi ⟩:= hJ_covers_I h
+    obtain ⟨i, h, hi ⟩:= J_covers_I h
     have hφ : φ i := by
       unfold φ
       simp only [
