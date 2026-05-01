@@ -39,7 +39,7 @@ by
   intro ε hε
 
   let ε' := ε / μ
-  let hε' := div_pos hε hμ
+  let hε' : 0 < ε / μ := div_pos hε hμ
 
   obtain ⟨δ, δ_pos, hδ⟩ := f'_uniform ε' hε'
 
@@ -53,7 +53,7 @@ by
   have hδ': is_uniform_with f' I ε' δ' :=
     uniform_transitivity hδ δ'_leq_δ
 
-  clear δ'_leq_δ δ_pos
+  clear δ'_leq_δ δ_pos hδ f'_uniform hI
 
   let n : ℕ := k.toNat
   let subdiv (i : ℕ) : ℝ := a + i * δ'
@@ -70,7 +70,7 @@ by
   have f'_uniform_on_J {i : ℕ} (hi : i < n) : is_uniform_with f' (J i) ε' δ' :=
     uniform_restriction hδ' (J_in_I hi)
 
-  clear hδ hδ'
+  clear hδ'
 
   have dist_J {i : ℕ}
     {x y : ℝ}
@@ -92,16 +92,23 @@ by
       f'_uniform_on_J  hi y hy x h₁x (dist_J hy h₁x)
     simpa [h₂x] using h
 
-  have hφ_f : ∀ i < n,
-    φ i → ∀ x ∈ J i, ∀ y ∈ J i,
+  have hφ_f {i : ℕ} (hi : i < n) (hφ : φ i)
+    {x y : ℝ} (hx : x ∈ J i) (hy : y ∈ J i) :
     |f x - f y| ≤ δ' * ε' := by
-      intro i hi hφ x hx y hy
       have hxy : |x - y| ≤ δ' := dist_J hx hy
       have lip_ineq : |f x - f y| ≤ ε' * |x - y| :=
         deriv_bound_imp_lip hf (hφ_f' hi hφ) J_convex hy hx
       nlinarith
 
-  clear J_in_I J_convex dist_J hφ_f' f'_uniform f'_uniform_on_J
+  have hφ {i : ℕ} (hi : i < n) (hφ : φ i)
+    {y₁ y₂ : ℝ} (h₁ : y₁ ∈ f '' J i) (h₂ : y₂ ∈ f '' J i) :
+    |y₁ - y₂| ≤ δ' * ε' := by
+    obtain ⟨x₁, hx₁, hy₁⟩ := (mem_image f (J i) y₁).mp h₁
+    obtain ⟨x₂, hx₂, hy₂⟩ := (mem_image f (J i) y₂).mp h₂
+    rw [← hy₁, ← hy₂]
+    exact hφ_f hi hφ hx₁ hx₂
+
+  clear J_in_I J_convex dist_J hφ_f' hφ_f f'_uniform_on_J
 
   have J_covers_I {x : ℝ} (hx : x ∈ I) : ∃ i < n, x ∈ J i := by
     suffices h : I = ⋃ i < n, J i by
@@ -152,12 +159,72 @@ by
     ∀ (n : ℕ), ∑ k ∈ Finset.range (n + 1), (b k - a k) ≤ ε by
     exact subset_measure_maj h_imA h
 
-  clear A h_imA
+  clear A h_imA J_covers_I
+
+  have J_compact (i : ℕ) : IsCompact (J i) := isCompact_Icc
+  have J_ne {i : ℕ} (hi : φ i) : (J i).Nonempty := by
+    unfold φ at hi
+    simp only [
+      bne_iff_ne,
+      ne_eq,
+      sep_eq_empty_iff_mem_false,
+      not_forall,
+      Decidable.not_not] at hi
+    obtain ⟨x, hx, _⟩ := hi
+    exact ⟨x, hx⟩
+
+  have f_cont (i : ℕ) : ContinuousOn f (J i) :=
+    Continuous.continuousOn (ContDiff.continuous hf)
+
+  have fJ_bounds {i : ℕ} (hi : i ∈ K) :
+    ∃ m M : ℝ, m ∈ f '' (J i) ∧ M ∈ f '' (J i) ∧
+    ∀ x ∈ f '' (J i), m ≤ x ∧ x ≤ M := by
+    unfold K at hi
+    simp only [mem_setOf_eq] at hi
+    obtain ⟨hi₁, hi₂⟩ := hi
+    obtain ⟨s, hs₁, hs₂⟩ :=
+      IsCompact.exists_isMinOn (J_compact i) (J_ne hi₂) (f_cont i)
+    obtain ⟨S, hS₁, hS₂⟩ :=
+      IsCompact.exists_isMaxOn (J_compact i) (J_ne hi₂) (f_cont i)
+    simp only [isMinOn_iff] at hs₂
+    simp only [isMaxOn_iff] at hS₂
+
+    let m := f s
+    let M := f S
+    obtain ⟨hm₁, hm₂⟩ : m ∈ f '' (J i) ∧ ∀ x ∈ J i, m ≤ f x := by
+      unfold m
+      constructor
+      · exact mem_image_of_mem f hs₁
+      · intro x hx
+        exact hs₂ x hx
+    obtain ⟨hM₁, hM₂⟩ : M ∈ f '' (J i) ∧ ∀ x ∈ J i, f x ≤ M := by
+      unfold M
+      constructor
+      · exact mem_image_of_mem f hS₁
+      · intro x hx
+        exact hS₂ x hx
+
+    use m, M
+    use hm₁, hM₁
+    intro y hy
+    obtain ⟨x , hx, hy⟩ := (mem_image f (J i) y).mp hy
+    rw [← hy]
+    constructor
+    · exact hm₂ x hx
+    · exact hM₂ x hx
+
+  clear J_compact J_ne
 
   have hJ {i : ℕ} (hi : i ∈ K) :
-    ∃ x y : ℝ, x ≤ y ∧ |x - y| ≤ δ' * ε ∧ f '' J i ⊆ Icc x y := by
-    apply?
-
+    ∃ m M : ℝ, m ≤ M ∧ |m - M| ≤ δ' * ε' ∧ f '' J i ⊆ Icc m M := by
+    obtain ⟨m, M, hm₁, hM₁, h₂⟩ := fJ_bounds hi
+    let hm₂ {x : ℝ} (hx : x ∈ f '' (J i)) := (h₂ x hx).1
+    let hM₂ {x : ℝ} (hx : x ∈ f '' (J i)) := (h₂ x hx).2
+    unfold K at hi
+    simp only [mem_setOf_eq] at hi
+    obtain ⟨hi₁, hi₂⟩ := hi
+    use m, M
+    refine ⟨hm₂ hM₁, hφ hi₁ hi₂ hm₁ hM₁, h₂⟩
   sorry
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) :
