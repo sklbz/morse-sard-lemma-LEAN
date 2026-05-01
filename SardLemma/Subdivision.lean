@@ -63,7 +63,7 @@ lemma subdivision_intervals_subset
     let I := Set.Icc a b
     J i ⊆ I := by
   intro δ subdiv J I
-  have hi_plus: i + 1 ≤ k.toNat := by
+  have hi_plus : i + 1 ≤ k.toNat := by
     nlinarith
   refine Set.Icc_subset I ?_ (subdivision_bounds hk hμ hi_plus)
   exact subdivision_bounds hk hμ (le_of_lt hi)
@@ -142,7 +142,7 @@ lemma subdivision_covers
   have h_union := subdivision_union (k - 1).toNat hsub
   simp only [Int.pred_toNat] at h_union
   rw [hk_nat] at h_union
-  have hk_eq_nat : k = (k.toNat: ℤ) := by omega
+  have hk_eq_nat : k = (k.toNat : ℤ) := by omega
   change Icc (sub 0) (sub k.toNat) = ⋃ i : ℕ, ⋃ (_ : (i : ℤ) ≤ k - 1), Icc (sub i) (sub (i + 1))
   rw [← hk_nat]
   convert h_union using 2
@@ -155,7 +155,7 @@ lemma subdivision_covers
     omega
 
 
-example {k : ℤ} (hk : 0 < (k : ℤ) ) : 0 ≤ k - 1 := by
+example {k : ℤ} (hk : 0 < (k : ℤ)) : 0 ≤ k - 1 := by
   exact Int.sub_nonneg_of_le hk
 
 end Subdivision

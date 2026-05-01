@@ -6,3 +6,4 @@ import SardLemma.Lipschitz
 import SardLemma.Measure
 import SardLemma.Subdivision
 import SardLemma.Uniform
+import SardLemma.Tactics

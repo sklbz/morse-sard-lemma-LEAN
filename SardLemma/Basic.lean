@@ -8,6 +8,7 @@ import Mathlib.Data.Finset.Defs
 import Mathlib.Data.Real.Basic
 import SardLemma.Subdivision
 import SardLemma.Lipschitz
+import SardLemma.Tactics
 import SardLemma.Interval
 import SardLemma.Uniform
 import SardLemma.Measure
@@ -44,13 +45,13 @@ by
   obtain ⟨δ, δ_pos, hδ⟩ := f'_uniform ε' hε'
 
   let k : ℤ := ⌈μ / δ⌉
-  have hk : (k: ℝ) > 0 := Int.cast_pos.2 (Int.ceil_pos.2 (div_pos hμ δ_pos))
+  have hk : (k : ℝ) > 0 := Int.cast_pos.2 (Int.ceil_pos.2 (div_pos hμ δ_pos))
 
   let δ' := μ / k
-  have δ'_pos: δ' > 0 := div_pos hμ hk
-  have δ'_leq_δ: δ' ≤ δ := div_ceil_le hμ δ_pos
+  have δ'_pos : δ' > 0 := div_pos hμ hk
+  have δ'_leq_δ : δ' ≤ δ := div_ceil_le hμ δ_pos
 
-  have hδ': is_uniform_with f' I ε' δ' :=
+  have hδ' : is_uniform_with f' I ε' δ' :=
     uniform_transitivity hδ δ'_leq_δ
 
   clear δ'_leq_δ δ_pos hδ f'_uniform hI
@@ -89,7 +90,7 @@ by
     intro y hy
     obtain ⟨x, h₁x, h₂x⟩ := exists_in_nonempty hJ
     have h : |f' y - f' x| ≤ ε' :=
-      f'_uniform_on_J  hi y hy x h₁x (dist_J hy h₁x)
+      f'_uniform_on_J hi y hy x h₁x (dist_J hy h₁x)
     simpa [h₂x] using h
 
   have hφ_f {i : ℕ} (hi : i < n) (hφ : φ i)
@@ -129,21 +130,16 @@ by
 
   have hA : A ⊆ ⋃ i ∈ K, J i := by
     intro x ⟨ h, hx ⟩
-    obtain ⟨i, h, hi ⟩:= J_covers_I h
+    obtain ⟨i, h, hi ⟩ := J_covers_I h
     have hφ : φ i := by
       unfold φ
-      simp only [
-        bne_iff_ne,
-        ne_eq,
-        sep_eq_empty_iff_mem_false,
-        not_forall,
-        Decidable.not_not]
+      simp only [nonempty]
       exact ⟨x, hi, hx⟩
     unfold K
     simp only [mem_setOf_eq, mem_iUnion, exists_prop, and_assoc]
     exact ⟨i, h, hφ, hi⟩
 
-  have h_imU: f '' ⋃ i ∈ K, J i = ⋃ i ∈ K, f '' J i := by
+  have h_imU : f '' ⋃ i ∈ K, J i = ⋃ i ∈ K, f '' J i := by
     exact image_iUnion₂ f fun i j ↦ J i
 
   have h_imA : f '' A ⊆ ⋃ i ∈ K, f '' J i := by
@@ -164,12 +160,7 @@ by
   have J_compact (i : ℕ) : IsCompact (J i) := isCompact_Icc
   have J_ne {i : ℕ} (hi : φ i) : (J i).Nonempty := by
     unfold φ at hi
-    simp only [
-      bne_iff_ne,
-      ne_eq,
-      sep_eq_empty_iff_mem_false,
-      not_forall,
-      Decidable.not_not] at hi
+    simp only [nonempty] at hi
     obtain ⟨x, hx, _⟩ := hi
     exact ⟨x, hx⟩
 
@@ -207,7 +198,7 @@ by
     use m, M
     use hm₁, hM₁
     intro y hy
-    obtain ⟨x , hx, hy⟩ := (mem_image f (J i) y).mp hy
+    obtain ⟨x, hx, hy⟩ := (mem_image f (J i) y).mp hy
     rw [← hy]
     constructor
     · exact hm₂ x hx
