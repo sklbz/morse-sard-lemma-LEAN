@@ -6,6 +6,7 @@ import Mathlib.Order.Interval.Set.Defs
 import Mathlib.Analysis.Convex.Basic
 import Mathlib.Data.Finset.Defs
 import Mathlib.Data.Real.Basic
+import SardLemma.CompactImage
 import SardLemma.Subdivision
 import SardLemma.Lipschitz
 import SardLemma.Tactics
@@ -173,36 +174,7 @@ by
     unfold K at hi
     simp only [mem_setOf_eq] at hi
     obtain ⟨hi₁, hi₂⟩ := hi
-    obtain ⟨s, hs₁, hs₂⟩ :=
-      IsCompact.exists_isMinOn (J_compact i) (J_ne hi₂) (f_cont i)
-    obtain ⟨S, hS₁, hS₂⟩ :=
-      IsCompact.exists_isMaxOn (J_compact i) (J_ne hi₂) (f_cont i)
-    simp only [isMinOn_iff] at hs₂
-    simp only [isMaxOn_iff] at hS₂
-
-    let m := f s
-    let M := f S
-    obtain ⟨hm₁, hm₂⟩ : m ∈ f '' (J i) ∧ ∀ x ∈ J i, m ≤ f x := by
-      unfold m
-      constructor
-      · exact mem_image_of_mem f hs₁
-      · intro x hx
-        exact hs₂ x hx
-    obtain ⟨hM₁, hM₂⟩ : M ∈ f '' (J i) ∧ ∀ x ∈ J i, f x ≤ M := by
-      unfold M
-      constructor
-      · exact mem_image_of_mem f hS₁
-      · intro x hx
-        exact hS₂ x hx
-
-    use m, M
-    use hm₁, hM₁
-    intro y hy
-    obtain ⟨x, hx, hy⟩ := (mem_image f (J i) y).mp hy
-    rw [← hy]
-    constructor
-    · exact hm₂ x hx
-    · exact hM₂ x hx
+    exact compact_has_compact_image (J_compact i) (J_ne hi₂) (f_cont i)
 
   clear J_compact J_ne
 
@@ -216,6 +188,38 @@ by
     obtain ⟨hi₁, hi₂⟩ := hi
     use m, M
     refine ⟨hm₂ hM₁, hφ hi₁ hi₂ hm₁ hM₁, h₂⟩
+
+  let P (i : ℕ) (pair : ℝ×ℝ) : Prop :=
+    pair.1 ≤ pair.2 ∧ |pair.1 - pair.2| ≤ δ' * ε' ∧
+    f '' J i ⊆ Icc pair.1 pair.2
+
+  have exist_bound : ∀ i ∈ K, ∃ pair : ℝ×ℝ, P i pair := by
+    intro i hi
+    unfold P
+    simp only [Prod.exists]
+    exact hJ hi
+
+  open Classical in
+  have exist_choice_fun : ∃ f : ℕ → ℝ × ℝ, ∀ i ∈ K, P i (f i) := by
+    refine ⟨fun i => ?_, fun i hi => ?_⟩
+    · exact if hi : i ∈ K then choose (exist_bound i hi) else (0, 0)
+    · simp only [hi, ↓reduceDIte]
+      exact choose_spec (exist_bound i hi)
+  open Classical in
+  let bound_choice := choose exist_choice_fun
+  open Classical in
+  have spec : ∀ i ∈ K, P i (bound_choice i) := by
+    unfold bound_choice
+    exact choose_spec exist_choice_fun
+
+  let lower (i : ℕ) : ℝ := if hi : i ∈ K then (bound_choice i).1 else 0
+  let upper (i : ℕ) : ℝ := if hi : i ∈ K then (bound_choice i).2 else 0
+  have spec_prod : ∀ i ∈ K, P i (lower i, upper i) := by
+    intro i hi
+    unfold upper lower
+    simp only [hi, ↓reduceDIte, Prod.mk.eta]
+    exact spec i hi
+
   sorry
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) :

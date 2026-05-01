@@ -9,7 +9,7 @@ open Finset
 namespace Measure
 
 def measure_maj (A : Set ℝ) (ε : ℝ) : Prop :=
-  ∃ (a b: ℕ → ℝ), (∀ n, a n ≤ b n) ∧
+  ∃ (a b : ℕ → ℝ), (∀ n, a n ≤ b n) ∧
   (A ⊆ ⋃ n, Set.Icc (a n) (b n)) ∧
   (∀ n : ℕ, (∑ k ∈ range (n+1), (b k - a k)) ≤ ε)
 
