@@ -214,13 +214,82 @@ by
 
   let lower (i : ℕ) : ℝ := if hi : i ∈ K then (bound_choice i).1 else 0
   let upper (i : ℕ) : ℝ := if hi : i ∈ K then (bound_choice i).2 else 0
-  have spec_prod : ∀ i ∈ K, P i (lower i, upper i) := by
+  let dist (i : ℕ) : ℝ := (upper i) - (lower i)
+  have spec : ∀ i ∈ K, P i (lower i, upper i) := by
     intro i hi
     unfold upper lower
     simp only [hi, ↓reduceDIte, Prod.mk.eta]
     exact spec i hi
 
-  sorry
+  unfold P at spec
+  have hK : ∀ i ∈ K, dist i ≤ ε / n := by
+    intro i hi
+    unfold dist
+    unfold δ' ε' at spec
+    have hn : (n : ℝ) = (k : ℝ) := by
+      unfold n
+      exact Eq.symm (nat_eq_toNat hk)
+    rw [hn]
+    field_simp at spec
+    field_simp
+    have h : (upper i) - (lower i) ≤ |(upper i) - (lower i)| :=
+      le_abs_self (upper i - lower i)
+    have h : ((upper i) - (lower i)) * k ≤ |(upper i) - (lower i)| * k :=
+      (mul_le_mul_iff_of_pos_right hk).mpr h
+    have h_abs : |(lower i) - (upper i)| * k ≤ ε := (spec i hi).2.1
+    have eq_invert : |(lower i) - (upper i)| = |(upper i) - (lower i)| := by
+      exact abs_sub_comm (lower i) (upper i)
+    rw [eq_invert] at h_abs
+    exact Std.IsPreorder.le_trans
+      ((upper i - lower i) * ↑k)
+      (|upper i - lower i| * ↑k)
+      ε h h_abs
+  have hn {i : ℕ} (hi : i < n) : dist i ≤ ε / n := by
+    if h : i ∈ K then
+      exact hK i h
+    else
+      expose_names
+      unfold dist lower upper
+      simp only [h, ↓reduceDIte, sub_self]
+      have n_pos : 0 < (n : ℝ) := by
+        unfold n
+        apply Eq.symm (nat_eq_toNat hk)
+
+      exact?
+
+
+  use lower, upper
+
+  let L := ⋃ i ∈ K, f '' (J i)
+  let U := ⋃ n, Icc (lower n) (upper n)
+
+  simp only at spec
+
+  change (∀ (n : ℕ), lower n ≤ upper n) ∧ L ⊆ U ∧
+    ∀ (n : ℕ), ∑ k ∈ Finset.range (n + 1), (upper k - lower k) ≤ ε
+
+  refine ⟨?_, ?_, ?_⟩
+  · intro i
+    if hi : i ∈ K then
+      apply (spec i hi).1
+    else
+      expose_names
+      unfold lower upper
+      simp only [hi, ↓reduceDIte]
+      rfl
+  · unfold L U
+    refine iUnion₂_subset_iff.mpr ?_
+    intro i hi
+    have h : f '' J i ⊆ Icc (lower i) (upper i) := (spec i hi).2.2
+    exact subset_iUnion_of_subset i h
+  · intro m
+    change ∑ i ∈ Finset.range (m + 1), dist i ≤ ε
+    if h : m > n then
+      have : ∑ k ∈ Finset.range (m + 1),
+
+    else
+      sorry
+
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) :
   is_negligeable (f '' {x | deriv f x = 0}) :=
