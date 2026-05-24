@@ -42,6 +42,8 @@ by
   let δ' := μ / k
 
   let n : ℕ := k.toNat
+  have n_eq_k : (n : ℝ) = (k : ℝ) := Eq.symm (nat_eq_toNat hk)
+
   let subdiv (i : ℕ) : ℝ := a + i * δ'
   let J (i : ℕ) : Set ℝ := Icc (subdiv i) (subdiv (i+1))
 
@@ -184,7 +186,10 @@ by
   have hepsn : n * (ε / (n : ℝ)) = ε := by
     refine mul_div_cancel_of_imp' ?_
     intro h
-    sorry
+    rw [← n_eq_k] at hk
+    have hn : (n : ℝ) ≠ 0 := by exact Ne.symm (Std.ne_of_lt hk)
+    apply hn at h
+    exact not_neZero.mp fun a ↦ h
   have heps : ∑ i < n, (ε / (n : ℝ)) = ε := by
     rw [heps]
     exact hepsn
