@@ -2,6 +2,7 @@
 import Mathlib.Analysis.Calculus.ContDiff.Deriv
 import Mathlib.Order.Interval.Set.Defs
 import Mathlib.Data.Finset.Defs
+import Mathlib.Topology.Algebra.InfiniteSum.Order
 import SardLemma.CompactImage
 import SardLemma.Decidable
 import SardLemma.Subdivision
@@ -173,6 +174,22 @@ by
   let L := ⋃ i ∈ K, f '' (J i)
   let U := ⋃ n, Icc (lower n) (upper n)
 
+  have : ∑ i < n, dist i ≤ ∑ i < n, (ε / (n : ℝ)) := by
+    refine sum_le_sum ?_
+    intro i hi
+    have hi : i < n := (LocallyFiniteOrderBot.finset_mem_Iio n i).mp hi
+    exact hn hi
+  have heps : ∑ i < n, (ε / (n : ℝ)) = n * (ε / (n : ℝ)) := by
+    simp only [sum_const, Nat.card_Iio, nsmul_eq_mul]
+  have hepsn : n * (ε / (n : ℝ)) = ε := by
+    refine mul_div_cancel_of_imp' ?_
+    intro h
+    sorry
+  have heps : ∑ i < n, (ε / (n : ℝ)) = ε := by
+    rw [heps]
+    exact hepsn
+
+  have : ∑ i < n, dist i ≤ ε := le_of_le_of_eq this heps
 
   use lower, upper
 
@@ -206,6 +223,12 @@ by
         ∑ i ∈ Finset.range (n + 1), dist i := by
           sorry
       sorry
+
+example (a : ℕ → ℝ) (x : ℝ) (n : ℕ) (ha : ∀ i < n, a i ≤ x) : ∑ i < n, a i ≤ ∑ _ < n, x := by
+  refine sum_le_sum ?_
+  intro i hi
+  have hi : i < n := (LocallyFiniteOrderBot.finset_mem_Iio n i).mp hi
+  exact ha i hi
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) :
   is_negligeable (f '' {x | deriv f x = 0}) :=
