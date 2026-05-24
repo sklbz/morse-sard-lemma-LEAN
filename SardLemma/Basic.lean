@@ -9,6 +9,7 @@ import SardLemma.Uniform
 import SardLemma.Measure
 
 open BigOperators
+open Finset
 open Set
 
 open Subdivision
@@ -111,6 +112,8 @@ by
     simp only [upper, lower, hi, ↓reduceDIte, Prod.mk.eta, spec]
 
   unfold P at spec
+  simp only at spec
+
   have hK : ∀ i ∈ K, dist i ≤ ε / n := by
     intro i hi
     unfold dist
@@ -141,18 +144,37 @@ by
       expose_names
       unfold dist lower upper
       simp only [h, ↓reduceDIte, sub_self]
-      have n_pos : 0 < (n : ℝ) := by
+      have n_pos : 0 ≤ (n : ℝ) := by
         unfold n
         rw [← nat_eq_toNat hk]
-        exact RCLike.ofReal_pos.mp hk
-      sorry
+        exact le_of_lt (RCLike.ofReal_pos.mp hk)
+      refine div_nonneg (le_of_lt hε) n_pos
 
-  use lower, upper
+  have hbeyondK {i : ℕ} (hi : i ≥ n) : i ∉ K := by
+    unfold K
+    refine notMem_setOf_iff.mpr ?_
+    refine Decidable.not_and_iff_or_not.mpr ?_
+    constructor
+    · exact Nat.not_lt.mpr hi
+
+  have hinfty {i : ℕ} (hi : i ≥ n) : dist i = 0 := by
+    unfold dist upper lower
+    simp only [hbeyondK hi, ↓reduceDIte, sub_self]
+
+  have hpos (i : ℕ) : dist i ≥ 0 := by
+    unfold dist
+    simp only [ge_iff_le, sub_nonneg]
+    if hi : i ∈ K then
+      exact (spec i hi).1
+    else
+      unfold upper lower
+      simp only [hi, ↓reduceDIte, Std.le_refl]
 
   let L := ⋃ i ∈ K, f '' (J i)
   let U := ⋃ n, Icc (lower n) (upper n)
 
-  simp only at spec
+
+  use lower, upper
 
   change (∀ (n : ℕ), lower n ≤ upper n) ∧ L ⊆ U ∧
     ∀ (n : ℕ), ∑ k ∈ Finset.range (n + 1), (upper k - lower k) ≤ ε
@@ -173,14 +195,17 @@ by
   · intro m
     change ∑ i ∈ Finset.range (m + 1), dist i ≤ ε
     if h : m > n then
-      have :
-        ∑ i ∈ Finset.range (m + 1), dist i =
-        ∑ i ∈ Finset.range n, dist i := by
-        sorry
       sorry
     else
+      simp only [gt_iff_lt, not_lt] at h
+      have hpos : ∀ i : ℕ, dist i ≥ 0 := by
+        intro i
+        exact RCLike.ofReal_nonneg.mp (hpos i)
+      have h :
+        ∑ i ∈ Finset.range (m + 1), dist i ≤
+        ∑ i ∈ Finset.range (n + 1), dist i := by
+          sorry
       sorry
-
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) :
   is_negligeable (f '' {x | deriv f x = 0}) :=
