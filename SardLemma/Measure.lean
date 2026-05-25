@@ -27,4 +27,8 @@ lemma negligeable_subset {A B : Set ℝ} (hA : A ⊆ B) (hB : is_negligeable B) 
   intro ε hε
   exact subset_measure_maj hA (hB ε hε)
 
+lemma negligeable_union {A : ℕ → Set ℝ} (hA : ∀ n, is_negligeable (A n)) :
+  is_negligeable (⋃ n : ℕ, A n) := by
+  sorry
+
 end Measure

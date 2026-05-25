@@ -17,7 +17,7 @@ open Subdivision
 open Uniform
 open Measure
 
-lemma sard_lemma_compact (a b : ℝ) (f : ℝ → ℝ) (hμ : b - a > 0) (hf : ContDiff ℝ 1 f) :
+lemma sard_lemma_compact {a b : ℝ} {f : ℝ → ℝ} (hμ : b - a > 0) (hf : ContDiff ℝ 1 f) :
   is_negligeable (f '' {x ∈ Icc a b | deriv f x = 0}) :=
 by
   let I : Set ℝ := Icc a b
@@ -83,34 +83,24 @@ by
   simp only at spec
   have hK : ∀ i ∈ K, dist i ≤ ε / n := by
     intro i hi
-    let hpair := spec i hi
-    unfold δ' ε' at hpair
-    field_simp at hpair
-    have hn : (n : ℝ) = k := by
-      unfold n
-      exact Eq.symm (nat_eq_toNat hk)
-    unfold dist
-    rw [hn]
-    field_simp
+    have hs := spec i hi
+    unfold dist δ' ε' at *
+    rw [show (n : ℝ) = k by simpa [n] using (nat_eq_toNat hk).symm]
+    field_simp at hs ⊢
     calc
-      (upper i - lower i) * k ≤ |upper i - lower i| * k := by
-        gcongr
+      k * (upper i - lower i) ≤ |upper i - lower i| * k := by
+        field_simp
         exact le_abs_self _
-      _ = |lower i - upper i| * k := by
-        rw [abs_sub_comm]
-      _ ≤ ε := hpair.2.1
+      _ = |lower i - upper i| * k := by rw [abs_sub_comm]
+      _ ≤ ε := hs.2.1
   have hn {i : ℕ} (hi : i < n) : dist i ≤ ε / n := by
-    if h : i ∈ K then
-      exact hK i h
-    else
-      expose_names
-      unfold dist lower upper
+    by_cases h : i ∈ K
+    · exact hK i h
+    · unfold dist lower upper
+      unfold n
+      rw [← nat_eq_toNat hk]
       simp only [h, ↓reduceDIte, sub_self]
-      have n_pos : 0 ≤ (n : ℝ) := by
-        unfold n
-        rw [← nat_eq_toNat hk]
-        exact le_of_lt (RCLike.ofReal_pos.mp hk)
-      refine div_nonneg (le_of_lt hε) n_pos
+      refine div_nonneg (le_of_lt hε) (le_of_lt (RCLike.ofReal_pos.mp hk))
   let A : Finset ℕ := range n
   have hA : ∀ i ∉ A, dist i = 0 := by
     unfold A
@@ -148,11 +138,9 @@ by
     ∑' (n : ℕ), (upper n - lower n) ≤ ε
   refine ⟨?_, ?_, ?_⟩
   · intro i
-    if hi : i ∈ K then
-      apply (spec i hi).1
-    else
-      expose_names
-      simp only [lower, upper, hi, ↓reduceDIte]
+    by_cases hi : i ∈ K
+    · apply (spec i hi).1
+    · simp only [lower, upper, hi, ↓reduceDIte]
       rfl
   · unfold L U
     refine iUnion₂_subset_iff.mpr ?_
@@ -165,4 +153,45 @@ by
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) :
   is_negligeable (f '' {x | deriv f x = 0}) :=
 by
+  have hcompact : ∀ n : ℕ,
+    is_negligeable (f '' { x ∈ Set.Icc (-n : ℝ) (n : ℝ) |
+    deriv f x = 0}) := by
+      intro n
+      by_cases h : n > 0
+      · have hsub : (n : ℝ) - (-n : ℝ) > 0 := by
+          field_simp
+          simp only [
+            sub_neg_eq_add,
+            pos_add_self_iff,
+            zero_lt_one,
+            mul_pos_iff_of_pos_right,
+            Nat.cast_pos
+          ]
+          exact h
+        exact sard_lemma_compact hsub hf
+      · sorry
+
+  suffices h :
+    f '' {x | deriv f x = 0} =
+    ⋃ (n : ℕ), f '' { x ∈ Set.Icc (-n : ℝ) (n : ℝ) | deriv f x = 0} by
+      rw [h]
+      exact negligeable_union hcompact
+
+  simp only [Set.mem_Icc]
+  rw [← Set.image_iUnion]
+  ext x
+  simp only [Set.mem_image, mem_setOf_eq, mem_iUnion, exists_and_right]
+  refine ⟨?_, ?_⟩
+  · intro ⟨y, h₁, h₂⟩
+    use y
+    rw [h₁, h₂]
+    simp only [and_true]
+    obtain ⟨n, hn⟩ := exists_nat_gt (|y|)
+    refine ⟨n, ?_, ?_⟩
+    · have hy : -|y| ≤ y := neg_abs_le y
+      linarith
+    · have hy : y ≤ |y| := le_abs_self y
+      linarith
+  · intro ⟨y, ⟨_, h₁⟩, h₂⟩
+    refine ⟨y, h₁, h₂⟩
   sorry
