@@ -11,7 +11,7 @@ namespace Measure
 def measure_maj (A : Set ℝ) (ε : ℝ) : Prop :=
   ∃ (a b : ℕ → ℝ), (∀ n, a n ≤ b n) ∧
   (A ⊆ ⋃ n, Set.Icc (a n) (b n)) ∧
-  (∀ n : ℕ, (∑ k ∈ range (n+1), (b k - a k)) ≤ ε)
+  ∑' (n : ℕ), (b n - a n) ≤ ε
 
 def is_negligeable (A : Set ℝ) : Prop :=
   ∀ ε > 0, measure_maj A ε
