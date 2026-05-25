@@ -22,13 +22,13 @@ lemma sard_lemma_compact (a b : ℝ) (f : ℝ → ℝ) (hμ : b - a > 0) (hf : C
 by
   let I : Set ℝ := Icc a b
   let μ := b - a
-  let f' : ℝ → ℝ := deriv f
   change μ > 0 at hμ
   intro ε hε
   let ε' := ε / μ
   have hε' : 0 < ε / μ := div_pos hε hμ
   have hI : IsCompact I := isCompact_Icc
-  have f'_uniform : is_uniform_metric f' I := uniform_derivative hI hf
+  have f'_uniform : is_uniform_metric (deriv f) I :=
+    uniform_derivative hI hf
   obtain ⟨δ, δ_pos, hδ⟩ := f'_uniform ε' hε'
   let k : ℤ := ⌈μ / δ⌉
   have hk : (k : ℝ) > 0 :=
@@ -38,19 +38,14 @@ by
   have n_eq_k : (n : ℝ) = (k : ℝ) := Eq.symm (nat_eq_toNat hk)
   let subdiv (i : ℕ) : ℝ := a + i * δ'
   let J (i : ℕ) : Set ℝ := Icc (subdiv i) (subdiv (i+1))
-  let φ (i : ℕ) : Prop := {x ∈ (J i) | f' x = 0}.Nonempty
+  let φ (i : ℕ) : Prop := {x ∈ (J i) | deriv f x = 0}.Nonempty
   have J_covers_I {x : ℝ} (hx : x ∈ I) : ∃ i < n, x ∈ J i := by
     suffices h : I = ⋃ i < n, J i by
       simp only [h, mem_iUnion, exists_prop] at hx
       exact hx
     exact subdivision_covers hk hμ
-  let A := {x ∈ I | f' x = 0}
+  let A := {x ∈ I | deriv f x = 0}
   let K := {i < n | φ i}
-  have A_eq_A : {x ∈ I | deriv f x = 0} = A := by
-    unfold A f'
-    rfl
-  rw [A_eq_A]
-  clear A_eq_A
   have hA : A ⊆ ⋃ i ∈ K, J i := by
     intro x ⟨ h, hx ⟩
     obtain ⟨i, h, hi ⟩ := J_covers_I h
@@ -76,45 +71,34 @@ by
     f '' J i ⊆ Icc pair.1 pair.2
   have exist_bound : ∀ i ∈ K, ∃ pair : ℝ×ℝ, P i pair :=
     no_classical_part hμ hf hε' δ_pos hδ
-  open Classical in
-  have exist_choice_fun : ∃ f : ℕ → ℝ × ℝ, ∀ i ∈ K, P i (f i) := by
-    choose τ h using exist_bound
-    refine ⟨fun (i : ℕ) => if hi : i ∈ K then τ i hi else (0, 0), ?_⟩
-    intro i hi
-    simp only [hi, ↓reduceDIte, h]
-  let bound_choice := choose exist_choice_fun
-  have spec : ∀ i ∈ K, P i (bound_choice i) :=
-    choose_spec exist_choice_fun
-  let lower (i : ℕ) : ℝ := if hi : i ∈ K then (bound_choice i).1 else 0
-  let upper (i : ℕ) : ℝ := if hi : i ∈ K then (bound_choice i).2 else 0
+  classical
+  choose τ hτ using exist_bound
+  let lower (i : ℕ) : ℝ := if hi : i ∈ K then (τ i hi).1 else 0
+  let upper (i : ℕ) : ℝ := if hi : i ∈ K then (τ i hi).2 else 0
   let dist (i : ℕ) : ℝ := (upper i) - (lower i)
   have spec : ∀ i ∈ K, P i (lower i, upper i) := by
     intro i hi
-    simp only [upper, lower, hi, ↓reduceDIte, Prod.mk.eta, spec]
+    simp only [upper, lower, hi, ↓reduceDIte, Prod.mk.eta, hτ]
   unfold P at spec
   simp only at spec
   have hK : ∀ i ∈ K, dist i ≤ ε / n := by
     intro i hi
-    unfold dist
-    unfold δ' ε' at spec
-    have hn : (n : ℝ) = (k : ℝ) := by
+    let hpair := spec i hi
+    unfold δ' ε' at hpair
+    field_simp at hpair
+    have hn : (n : ℝ) = k := by
       unfold n
       exact Eq.symm (nat_eq_toNat hk)
+    unfold dist
     rw [hn]
-    field_simp at spec
     field_simp
-    have h : (upper i) - (lower i) ≤ |(upper i) - (lower i)| :=
-      le_abs_self (upper i - lower i)
-    have h : ((upper i) - (lower i)) * k ≤ |(upper i) - (lower i)| * k :=
-      (mul_le_mul_iff_of_pos_right hk).mpr h
-    have h_abs : |(lower i) - (upper i)| * k ≤ ε := (spec i hi).2.1
-    have eq_invert : |(lower i) - (upper i)| = |(upper i) - (lower i)| := by
-      exact abs_sub_comm (lower i) (upper i)
-    rw [eq_invert] at h_abs
-    exact Std.IsPreorder.le_trans
-      ((upper i - lower i) * ↑k)
-      (|upper i - lower i| * ↑k)
-      ε h h_abs
+    calc
+      (upper i - lower i) * k ≤ |upper i - lower i| * k := by
+        gcongr
+        exact le_abs_self _
+      _ = |lower i - upper i| * k := by
+        rw [abs_sub_comm]
+      _ ≤ ε := hpair.2.1
   have hn {i : ℕ} (hi : i < n) : dist i ≤ ε / n := by
     if h : i ∈ K then
       exact hK i h
@@ -127,30 +111,17 @@ by
         rw [← nat_eq_toNat hk]
         exact le_of_lt (RCLike.ofReal_pos.mp hk)
       refine div_nonneg (le_of_lt hε) n_pos
-  have hbeyondK {i : ℕ} (hi : i ≥ n) : i ∉ K := by
-    unfold K
-    refine notMem_setOf_iff.mpr ?_
-    refine Decidable.not_and_iff_or_not.mpr ?_
-    constructor
-    · exact Nat.not_lt.mpr hi
-  have hinfty {i : ℕ} (hi : i ≥ n) : dist i = 0 := by
-    unfold dist upper lower
-    simp only [hbeyondK hi, ↓reduceDIte, sub_self]
   let A : Finset ℕ := range n
   have hA : ∀ i ∉ A, dist i = 0 := by
     unfold A
     simp only [Finset.mem_range, not_lt]
-    intro i
-    exact hinfty
-  clear hbeyondK hK hinfty
-  /- have hpos (i : ℕ) : dist i ≥ 0 := by -/
-    /- unfold dist -/
-    /- simp only [ge_iff_le, sub_nonneg] -/
-    /- if hi : i ∈ K then -/
-      /- exact (spec i hi).1 -/
-    /- else -/
-      /- unfold upper lower -/
-      /- simp only [hi, ↓reduceDIte, Std.le_refl] -/
+    intro i hi
+    apply Nat.not_lt.mpr at hi
+    unfold dist upper lower K
+    have hmem : i ∉ {i | i < n ∧ φ i} := by
+      intro h
+      exact hi h.1
+    simp only [hmem, ↓reduceDIte, sub_self]
   let L := ⋃ i ∈ K, f '' (J i)
   let U := ⋃ n, Icc (lower n) (upper n)
   have hdist : ∑ i ∈ A, dist i ≤ ε := by
@@ -190,17 +161,6 @@ by
     exact subset_iUnion_of_subset i h
   · rw [tsum_eq_sum hA]
     exact hdist
-
-example (a : ℕ → ℝ) (x : ℝ) (A : Finset ℕ) (hA : ∑ i ∈ A, a i ≤ x)
-  (ha : ∀ i ∉ A, a i = 0) : ∑' (i : ℕ), a i ≤ x := by
-  rw [tsum_eq_sum ha]
-  simpa using hA
-
-example (a : ℕ → ℝ) (x : ℝ) (n : ℕ) (ha : ∀ i < n, a i ≤ x) : ∑ i < n, a i ≤ ∑ _ < n, x := by
-  refine sum_le_sum ?_
-  intro i hi
-  have hi : i < n := (LocallyFiniteOrderBot.finset_mem_Iio n i).mp hi
-  exact ha i hi
 
 theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) :
   is_negligeable (f '' {x | deriv f x = 0}) :=
