@@ -31,4 +31,8 @@ lemma negligeable_union {A : ℕ → Set ℝ} (hA : ∀ n, is_negligeable (A n))
   is_negligeable (⋃ n : ℕ, A n) := by
   sorry
 
+lemma negligeable_singleton {A : Set ℝ}
+  (h : Set.Subsingleton A) : is_negligeable A := by
+  sorry
+
 end Measure

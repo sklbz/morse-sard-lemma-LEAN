@@ -154,7 +154,7 @@ theorem sard_lemma (f : ℝ → ℝ) (hf : ContDiff ℝ 1 f) :
   is_negligeable (f '' {x | deriv f x = 0}) :=
 by
   have hcompact : ∀ n : ℕ,
-    is_negligeable (f '' { x ∈ Set.Icc (-n : ℝ) (n : ℝ) |
+    is_negligeable (f '' { x ∈ Icc (-n : ℝ) (n : ℝ) |
     deriv f x = 0}) := by
       intro n
       by_cases h : n > 0
@@ -169,16 +169,20 @@ by
           ]
           exact h
         exact sard_lemma_compact hsub hf
-      · sorry
-
+      · simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero] at h
+        simp only [Set.mem_Icc, h, CharP.cast_eq_zero, neg_zero]
+        refine negligeable_singleton ?_
+        refine Subsingleton.image ?_ f
+        intro x hx y hy
+        simp only [mem_setOf_eq] at hx hy
+        linarith
   suffices h :
     f '' {x | deriv f x = 0} =
-    ⋃ (n : ℕ), f '' { x ∈ Set.Icc (-n : ℝ) (n : ℝ) | deriv f x = 0} by
+    ⋃ (n : ℕ), f '' { x ∈ Icc (-n : ℝ) (n : ℝ) | deriv f x = 0} by
       rw [h]
       exact negligeable_union hcompact
-
   simp only [Set.mem_Icc]
-  rw [← Set.image_iUnion]
+  rw [← image_iUnion]
   ext x
   simp only [Set.mem_image, mem_setOf_eq, mem_iUnion, exists_and_right]
   refine ⟨?_, ?_⟩
@@ -194,4 +198,3 @@ by
       linarith
   · intro ⟨y, ⟨_, h₁⟩, h₂⟩
     refine ⟨y, h₁, h₂⟩
-  sorry
